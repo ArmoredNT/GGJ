@@ -133,8 +133,9 @@ GameObject:
   m_Component:
   - component: {fileID: 524318148}
   - component: {fileID: 524318150}
-  - component: {fileID: 524318152}
   - component: {fileID: 524318151}
+  - component: {fileID: 524318153}
+  - component: {fileID: 524318152}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -178,7 +179,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 524318147}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3b7f6017905b84d44ab6d2dae141730c, type: 3}
+  m_Script: {fileID: 11500000, guid: 1d57a8fc848cccc428c1ce0dcda84c77, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!114 &524318152
@@ -193,6 +194,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8540397208a88c1459f1ff35eeb307c9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &524318153
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 524318147}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b7f6017905b84d44ab6d2dae141730c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ip: 127.0.0.1
 --- !u!1 &637318183
 GameObject:
   m_ObjectHideFlags: 0
@@ -276,9 +290,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: Client, Assembly-CSharp
-        m_MethodName: StartHosting
+      - m_Target: {fileID: 524318151}
+        m_TargetAssemblyTypeName: NetworkManager, Assembly-CSharp
+        m_MethodName: StartServer
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

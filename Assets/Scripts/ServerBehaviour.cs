@@ -1,6 +1,7 @@
 using UnityEngine;
 using Unity.Collections;
 using Unity.Networking.Transport;
+using System;
 
 public class ServerBehaviour : MonoBehaviour
 {
@@ -8,22 +9,27 @@ public class ServerBehaviour : MonoBehaviour
 	NetworkDriver m_Driver;
 	NativeList<NetworkConnection> m_Connections;
 
-	void Start()
+	bool running = false;
+
+	public void Init()
 	{
 		m_Driver = NetworkDriver.Create();
 		m_Connections = new NativeList<NetworkConnection>(16, Allocator.Persistent);
 
-		var endpoint = NetworkEndpoint.AnyIpv4.WithPort(7777);
+		var endpoint = NetworkEndpoint.AnyIpv4.WithPort(NetworkManager.serverPort);
 		if (m_Driver.Bind(endpoint) != 0)
 		{
-			Debug.LogError("Failed to bind to port 7777.");
+			Debug.LogError(string.Format("Failed to bind to port {0}.", NetworkManager.serverPort));
 			return;
 		}
 		m_Driver.Listen();
+
+		running = true;
 	}
 
-	void OnDestroy()
+	public void Close()
 	{
+		running = false;
 		if (m_Driver.IsCreated)
 		{
 			m_Driver.Dispose();
@@ -33,6 +39,8 @@ public class ServerBehaviour : MonoBehaviour
 
 	void Update()
 	{
+		if (!running) return;
+
 		m_Driver.ScheduleUpdate().Complete();
 
 		// Clean up connections.
@@ -62,12 +70,12 @@ public class ServerBehaviour : MonoBehaviour
 				if (cmd == NetworkEvent.Type.Data)
 				{
 					uint number = stream.ReadUInt();
-					Debug.Log($"Got {number} from a client, adding 2 to it.");
-					number += 2;
+					Debug.Log($"Got {number} from a client.");
+					//number += 2;
 
-					m_Driver.BeginSend(NetworkPipeline.Null, m_Connections[i], out var writer);
-					writer.WriteUInt(number);
-					m_Driver.EndSend(writer);
+					//m_Driver.BeginSend(NetworkPipeline.Null, m_Connections[i], out var writer);
+					//writer.WriteUInt(number);
+					//m_Driver.EndSend(writer);
 				}
 				else if (cmd == NetworkEvent.Type.Disconnect)
 				{

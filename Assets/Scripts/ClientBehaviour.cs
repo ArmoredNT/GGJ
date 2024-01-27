@@ -6,21 +6,34 @@ public class ClientBehaviour : MonoBehaviour
 	NetworkDriver m_Driver;
 	NetworkConnection m_Connection;
 
-	void Start()
+	[SerializeField] string ip = "127.0.0.1";
+
+	bool connected = false;
+
+	public void Init()
 	{
 		m_Driver = NetworkDriver.Create();
 
-		var endpoint = NetworkEndpoint.LoopbackIpv4.WithPort(7777);
+		var endpoint = NetworkEndpoint.Parse(ip, NetworkManager.serverPort);
 		m_Connection = m_Driver.Connect(endpoint);
+
+		connected = true;
 	}
 
-	void OnDestroy()
+	public void Disconnect()
 	{
-		m_Driver.Dispose();
+		connected = false;
+		if (m_Driver.IsCreated)
+		{
+			m_Connection.Disconnect(m_Driver);
+			m_Driver.Dispose();
+		}
 	}
 
 	void Update()
 	{
+		if (!connected) return;
+
 		m_Driver.ScheduleUpdate().Complete();
 
 		if (!m_Connection.IsCreated)
@@ -42,11 +55,11 @@ public class ClientBehaviour : MonoBehaviour
 			}
 			else if (cmd == NetworkEvent.Type.Data)
 			{
-				uint value = stream.ReadUInt();
-				Debug.Log($"Got the value {value} back from the server.");
+				//uint value = stream.ReadUInt();
+				//Debug.Log($"Got the value {value} back from the server.");
 
-				m_Connection.Disconnect(m_Driver);
-				m_Connection = default;
+				//m_Connection.Disconnect(m_Driver);
+				//m_Connection = default;
 			}
 			else if (cmd == NetworkEvent.Type.Disconnect)
 			{
