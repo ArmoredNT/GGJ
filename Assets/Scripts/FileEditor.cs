@@ -26,5 +26,7 @@ public class FileEditor : MonoBehaviour
             print(rawImage.uvRect);
         }
     }
+
     
+     
 }
