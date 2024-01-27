@@ -22,7 +22,7 @@ public class FileEditor : MonoBehaviour
             yield return uwr.SendWebRequest();
             //GetComponent<Renderer>().material.mainTexture
             rawImage.texture = DownloadHandlerTexture.GetContent(uwr);
-            rawImage.SetNativeSize();
+            //rawImage.SetNativeSize();
             print(rawImage.uvRect);
         }
     }
