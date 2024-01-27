@@ -180,7 +180,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b7f6017905b84d44ab6d2dae141730c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ip: 127.0.0.1
+  ip: newsgame.onrender.com
 --- !u!1 &1109149920
 GameObject:
   m_ObjectHideFlags: 0

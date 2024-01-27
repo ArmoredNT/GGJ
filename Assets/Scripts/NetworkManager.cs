@@ -15,6 +15,15 @@ public class NetworkManager : MonoBehaviour
 	{
 		ws = new WebSocket(string.Format("ws://{0}:{1}", ip, serverPort));
 		ws.Connect();
+
+		Debug.Log(string.Format("Connecting to ws://{0}:{1}", ip, serverPort));
+
+		ws.OnOpen += OnOpen;
+	}
+
+	private void OnOpen(object sender, EventArgs e)
+	{
+		Debug.Log("Open");
 		ws.Send("TEST");
 	}
 }
