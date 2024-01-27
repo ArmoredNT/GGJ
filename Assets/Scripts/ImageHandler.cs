@@ -13,16 +13,37 @@ class SavedImage
     private Vector2 _position;
     private float _scale;
 
-    public SavedImage(Vector2 pos, float size)
+    public SavedImage()
     {
-       
-        _position = pos;
-        _scale = size;
+        
     }
 
     public void SetTexture(Texture texture)
     {
         _image = texture;
+    }
+    
+    public Texture GetTexture()
+    {
+        return _image;
+    }
+
+    public void SetScale(float size)
+    {
+        _scale = size;
+    }
+    public float GetScale()
+    {
+        return _scale;
+    }
+
+    public void SetPos(Vector2 pos)
+    {
+        _position = pos;
+    }
+    public Vector2 GetPos()
+    {
+        return _position;
     }
 
 }
@@ -38,7 +59,7 @@ public class ImageHandler : MonoBehaviour
 
     private void Start()
     {
-        image = new SavedImage(rawImage.transform.position, 1);
+        image = new SavedImage();
     }
 
     public void OnURLEntered(string url)
@@ -59,5 +80,21 @@ public class ImageHandler : MonoBehaviour
             rawImage.SetNativeSize();
             print(rawImage.uvRect);
         }
+    }
+    
+    public void Scaling(float num)
+    {
+        rawImage.transform.localScale = new Vector3(num, num, 1);
+    }
+
+    public void EndEdit()
+    {
+        image.SetScale(rawImage.transform.localScale.x);
+        image.SetPos(rawImage.transform.localPosition);
+
+        screen.texture = image.GetTexture();
+        screen.SetNativeSize();
+        screen.transform.localScale = new Vector3(image.GetScale(), image.GetScale(), 1);
+        screen.transform.localPosition = image.GetPos();
     }
 }
