@@ -20,6 +20,8 @@ public class NetworkManager : MonoBehaviour
 	RTCPeerConnection rtcConnection;
 	RTCDataChannel sendChannel;
 
+	[SerializeField] string debugLobbyCode;
+
 	public void DebugConnect()
 	{
 		Connect();
@@ -121,6 +123,7 @@ public class NetworkManager : MonoBehaviour
 			if (packet.success)
 			{
 				Debug.Log("Sucessfully created a lobbby!");
+				Debug.Log(packet.code);
 			}
 			else
 			{

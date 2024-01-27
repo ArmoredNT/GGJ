@@ -180,7 +180,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1d57a8fc848cccc428c1ce0dcda84c77, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lobbyServerAddr: ws://127.0.0.1
+  customLobbyServerAddr: ws://127.0.0.1
+  useCustomAddr: 1
+  debugLobbyCode: 
 --- !u!1 &941192937
 GameObject:
   m_ObjectHideFlags: 0

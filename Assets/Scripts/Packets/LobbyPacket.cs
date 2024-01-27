@@ -26,6 +26,7 @@ public class LobbyPacket
 public class LobbyPacketResponse : LobbyPacket
 {
     public bool success = false;
+    public string code = "";
 
 	public LobbyPacketResponse() : base(LobbyPacketType.response)
     {
