@@ -34,6 +34,24 @@ public class PhotoTaker : MonoBehaviour
 
         // Display the captured photo (you can save it or perform other actions)
         previewImage2.texture = photo;
+
+        string fileName = Random.Range(10000, 99999).ToString() + "_DO_NOT_OPEN.png";
+        
+        SaveTextureToFile(photo, fileName);
+    }
+    
+    void SaveTextureToFile(Texture2D texture, string filename)
+    {
+        // Convert the texture to PNG format
+        byte[] bytes = texture.EncodeToPNG();
+
+        // Specify the file path
+        string filePath = System.IO.Path.Combine(Application.persistentDataPath, filename);
+
+        // Write the PNG data to a file
+        System.IO.File.WriteAllBytes(filePath, bytes);
+
+        Debug.Log("Texture saved as PNG: " + filePath);
     }
     
 }
