@@ -15,19 +15,32 @@ public class NetworkManager : MonoBehaviour
 		server = GetComponent<ServerBehaviour>();
 	}
 
-	public void StartServer()
+	public void StartHost()
 	{
-		Disconnect();
+		client.Disconnect();
+		server.Close();
 
-		Debug.Log("Starting server");
+		Debug.Log("Starting host");
 
 		server.Init();
 		client.Init();
 	}
 
-	public void Disconnect()
+	public void StartClient()
 	{
 		client.Disconnect();
+
+		Debug.Log("Connecting client");
+
+		client.Init();
+	}
+
+	public void StartServer()
+	{
 		server.Close();
+
+		Debug.Log("Connecting server");
+
+		server.Init();
 	}
 }
