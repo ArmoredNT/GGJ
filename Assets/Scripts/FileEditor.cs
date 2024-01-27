@@ -15,7 +15,7 @@ public class FileEditor : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        lijnf; 
+        
     }
     
     public void OpenFile()
