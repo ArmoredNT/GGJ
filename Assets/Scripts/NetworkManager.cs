@@ -1,46 +1,20 @@
-using System.Collections;
-using System.Collections.Generic;
+using System;
 using UnityEngine;
+using WebSocketSharp;
 
 public class NetworkManager : MonoBehaviour
 {
-	public const ushort serverPort = 7777;
+	// Port to connect to on the server
+	// MAKE SURE THIS MATCHES ON THE SERVER!!!
+	const ushort serverPort = 80;
+	[SerializeField] string ip = "127.0.0.1";
 
-	ClientBehaviour client;
-	ServerBehaviour server;
+	WebSocket ws;
 
-	private void Awake()
+	public void Connect()
 	{
-		client = GetComponent<ClientBehaviour>();
-		server = GetComponent<ServerBehaviour>();
-	}
-
-	public void StartHost()
-	{
-		client.Disconnect();
-		server.Close();
-
-		Debug.Log("Starting host");
-
-		server.Init();
-		client.Init();
-	}
-
-	public void StartClient()
-	{
-		client.Disconnect();
-
-		Debug.Log("Connecting client");
-
-		client.Init();
-	}
-
-	public void StartServer()
-	{
-		server.Close();
-
-		Debug.Log("Connecting server");
-
-		server.Init();
+		ws = new WebSocket(string.Format("ws://{0}:{1}", ip, serverPort));
+		ws.Connect();
+		ws.Send("TEST");
 	}
 }
