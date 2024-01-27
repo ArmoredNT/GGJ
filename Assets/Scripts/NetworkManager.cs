@@ -15,8 +15,6 @@ public class NetworkManager : MonoBehaviour
 
 	private async void Connect()
 	{
-		Debug.Log("TESTPACKET!!!!!");
-
 		webSocket = new ClientWebSocket();
 		try
 		{
@@ -33,7 +31,7 @@ public class NetworkManager : MonoBehaviour
 	{
 		if (webSocket.State == WebSocketState.Open)
 		{
-			var encoded = Encoding.UTF8.GetBytes("TEST");
+			var encoded = Encoding.UTF8.GetBytes("TEST PACKET!!!!");
 			var buffer = new ArraySegment<Byte>(encoded, 0, encoded.Length);
 			await webSocket.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);
 		}
