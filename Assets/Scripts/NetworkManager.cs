@@ -1,29 +1,41 @@
 using System;
 using UnityEngine;
-using WebSocketSharp;
+using System.Net.WebSockets;
+using System.Text;
+using System.Threading;
 
 public class NetworkManager : MonoBehaviour
 {
-	// Port to connect to on the server
-	// MAKE SURE THIS MATCHES ON THE SERVER!!!
-	const ushort serverPort = 80;
-	[SerializeField] string ip = "127.0.0.1";
+	private ClientWebSocket webSocket = null;
 
-	WebSocket ws;
-
-	public void Connect()
+	public void DebugConnect()
 	{
-		ws = new WebSocket(string.Format("ws://{0}:{1}", ip, serverPort));
-		ws.Connect();
-
-		Debug.Log(string.Format("Connecting to ws://{0}:{1}", ip, serverPort));
-
-		ws.OnOpen += OnOpen;
+		Connect();
 	}
 
-	private void OnOpen(object sender, EventArgs e)
+	private async void Connect()
 	{
-		Debug.Log("Open");
-		ws.Send("TEST");
+		Debug.Log("TESTPACKET!!!!!");
+
+		webSocket = new ClientWebSocket();
+		try
+		{
+			await webSocket.ConnectAsync(new Uri("wss://newsgame.onrender.com"), CancellationToken.None);
+			await SendTestPacket();
+		}
+		catch (Exception ex)
+		{
+			Debug.Log("WebSocket connection exception: " + ex.ToString());
+		}
+	}
+
+	private async System.Threading.Tasks.Task SendTestPacket()
+	{
+		if (webSocket.State == WebSocketState.Open)
+		{
+			var encoded = Encoding.UTF8.GetBytes("TEST");
+			var buffer = new ArraySegment<Byte>(encoded, 0, encoded.Length);
+			await webSocket.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);
+		}
 	}
 }

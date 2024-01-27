@@ -133,7 +133,7 @@ GameObject:
   m_Component:
   - component: {fileID: 524318148}
   - component: {fileID: 524318150}
-  - component: {fileID: 524318153}
+  - component: {fileID: 524318151}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -168,7 +168,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6f636eb39ab74154fb9fa93f2924149c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &524318153
+--- !u!114 &524318151
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -177,10 +177,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 524318147}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3b7f6017905b84d44ab6d2dae141730c, type: 3}
+  m_Script: {fileID: 11500000, guid: 1d57a8fc848cccc428c1ce0dcda84c77, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ip: newsgame.onrender.com
 --- !u!1 &1109149920
 GameObject:
   m_ObjectHideFlags: 0
@@ -398,9 +397,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 524318153}
+      - m_Target: {fileID: 524318151}
         m_TargetAssemblyTypeName: NetworkManager, Assembly-CSharp
-        m_MethodName: Connect
+        m_MethodName: DebugConnect
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
