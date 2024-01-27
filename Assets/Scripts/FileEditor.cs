@@ -1,7 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System.Windows.Forms;
+using System.Windows;
+
 
 public class FileEditor : MonoBehaviour
 {
@@ -14,7 +15,7 @@ public class FileEditor : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        lijnf; 
     }
     
     public void OpenFile()
