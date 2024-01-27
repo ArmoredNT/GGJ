@@ -23,7 +23,7 @@ public class WebCamTester : MonoBehaviour
 
         WebCamTexture tex = new WebCamTexture(devices[0].name);
         //rend.material.mainTexture = tex;
-        this.rend.texture = tex;
+        rend.texture = tex;
         tex.Play();
     }
 
