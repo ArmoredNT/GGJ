@@ -181,7 +181,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   customLobbyServerAddr: ws://127.0.0.1
-  useCustomAddr: 1
+  useCustomAddr: 0
   debugLobbyCode: 
 --- !u!1 &941192937
 GameObject:
