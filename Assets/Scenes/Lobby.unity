@@ -536,7 +536,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 524318151}
         m_TargetAssemblyTypeName: NetworkManager, Assembly-CSharp
-        m_MethodName: DebugConnect
+        m_MethodName: StartClientDebug
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

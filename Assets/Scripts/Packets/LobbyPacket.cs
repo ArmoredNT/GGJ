@@ -3,7 +3,9 @@ public enum LobbyPacketType
 {
     unknown,
     request,
-    response
+    response,
+    connectReq,
+    connectRes
 }
 
 [System.Serializable]
@@ -32,4 +34,26 @@ public class LobbyPacketResponse : LobbyPacket
     {
 		
     }
+}
+
+[System.Serializable]
+public class LobbyConnectRequest : LobbyPacket
+{
+	public string code;
+
+	public LobbyConnectRequest(string code) : base(LobbyPacketType.connectReq)
+	{
+        this.code = code;
+	}
+}
+
+[System.Serializable]
+public class LobbyConnectResponse : LobbyPacket
+{
+	public bool success = false;
+
+	public LobbyConnectResponse() : base(LobbyPacketType.connectRes)
+	{
+		
+	}
 }

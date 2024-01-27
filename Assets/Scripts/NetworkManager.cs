@@ -92,16 +92,6 @@ public class NetworkManager : MonoBehaviour
 		//yield return op6;
 	}
 
-	private async Task SendTestPacket()
-	{
-		if (webSocket.State == WebSocketState.Open)
-		{
-			var encoded = Encoding.UTF8.GetBytes("TEST PACKET!!!!");
-			var buffer = new ArraySegment<byte>(encoded, 0, encoded.Length);
-			await webSocket.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);
-		}
-	}
-
 	public void StartHostDebug()
 	{
 		StartHost();
@@ -128,6 +118,36 @@ public class NetworkManager : MonoBehaviour
 			else
 			{
 				Debug.Log("Failed to create lobby");
+			}
+		}
+	}
+
+	public void StartClientDebug()
+	{
+		StartClient();
+	}
+
+	private async void StartClient()
+	{
+		await InitWebSocket();
+
+		await SendObjectToServer(new LobbyConnectRequest(debugLobbyCode));
+
+		// Wait for confirmation
+		LobbyConnectResponse packet = new();
+		await ReceiveObjectFromServer(64, packet);
+
+		Debug.Log(JsonUtility.ToJson(packet));
+
+		if (packet.type == LobbyPacketType.response)
+		{
+			if (packet.success)
+			{
+				Debug.Log("Sucessfully joined lobbby!");
+			}
+			else
+			{
+				Debug.Log("Failed to join lobby");
 			}
 		}
 	}
