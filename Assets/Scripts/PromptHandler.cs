@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-
+using TMPro;
 public class PromptHandler : MonoBehaviour
 {
 
-    [SerializeField] private InputField input;
+    [SerializeField] private TMP_InputField input;
     private bool called = false;
 
     private string prompt;

@@ -17,9 +17,9 @@ public class AudioScript : MonoBehaviour
         slider.value = 0.5f;
     }
 
-    // Update is called once per frame
-    void Update()
+    public void ChangeVolume()
     {
-        source.volume = slider.value;
+        SoundControl.SetVolume(slider.value);
+        source.volume = SoundControl.GetVolume();
     }
 }
