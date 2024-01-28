@@ -44,9 +44,9 @@ public class NetworkManager2 : MonoBehaviour
 	private ClientWebSocket webSocket = null;
 
 	RtcConnection[] connections;
+	Host host;
 
 	bool isHost = false;
-	int lobbySize = 0;
 	string hostCode;
 
 	int clientPlayerNum = -1;
@@ -265,7 +265,7 @@ public class NetworkManager2 : MonoBehaviour
 		LobbySizePacket packet = new(-1);
 		await ReceiveObjectFromServer(packet, new byte[64]);
 
-		lobbySize = packet.size;
+		int lobbySize = packet.size;
 
 		Disconnect();
 
@@ -333,6 +333,9 @@ public class NetworkManager2 : MonoBehaviour
 			yield return null;
 		}
 		Debug.Log("All connected");
+
+		host = new Host();
+		host.Init(connections.Length + 1);
 
 		SendDataToAllClients("GOTO:INTRO");
 		GoToIntro();
@@ -411,6 +414,8 @@ public class NetworkManager2 : MonoBehaviour
 	private void HostAddPrompt(int playerID, string prompt)
 	{
 		Debug.Log(string.Format("Got prompt {0} from {1}", prompt, playerID));
+
+		host.AddPrompt(playerID, prompt);
 	}
 	#endregion
 
