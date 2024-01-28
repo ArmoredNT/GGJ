@@ -388,7 +388,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   customLobbyServerAddr: ws://127.0.0.1
-  useCustomAddr: 0
+  useCustomAddr: 1
   lobbyInput: {fileID: 1521536653}
 --- !u!1 &941192937
 GameObject:

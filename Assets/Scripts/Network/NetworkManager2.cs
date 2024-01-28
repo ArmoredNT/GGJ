@@ -64,6 +64,13 @@ public class NetworkManager2 : MonoBehaviour
 		rtcConnection.OnDataChannel = (channel) =>
 		{
 			Debug.Log("Data channel");
+			sendChannel = channel;
+			channel.OnMessage = (message) =>
+			{
+				Debug.Log(Encoding.UTF8.GetString(message));
+			};
+
+			channel.Send("TEST 2 YAYAYAYYAY!");
 		};
 
 		rtcConnection.OnIceCandidate = e =>
@@ -173,6 +180,7 @@ public class NetworkManager2 : MonoBehaviour
 		CreateLobby();
 	}
 
+	// Connect host to each client
 	private async Task ConnectP2P()
 	{
 		// Tell the server to start
@@ -188,7 +196,11 @@ public class NetworkManager2 : MonoBehaviour
 		sendChannel = rtcConnection.CreateDataChannel("sendChannel");
 		sendChannel.OnOpen = () =>
 		{
-			Debug.Log("Open");
+			sendChannel.Send("TEST WOWOWOWOWO!!!");
+		};
+		sendChannel.OnMessage = (message) =>
+		{
+			Debug.Log(Encoding.UTF8.GetString(message));
 		};
 
 		StartCoroutine(HostCreateOffer());
