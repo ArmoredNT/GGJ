@@ -620,7 +620,7 @@ public class NetworkManager2 : MonoBehaviour
 		ClientSendToServer("LOADED_PHOTO_PROMPT:");
 	}
 
-	void ClientSendToServer(string message)
+	public void ClientSendToServer(string message)
 	{
 		connections[0].sendChannel.Send(Encoding.UTF8.GetBytes(message));
 	}
