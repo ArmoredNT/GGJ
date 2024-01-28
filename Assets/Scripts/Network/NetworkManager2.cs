@@ -81,7 +81,7 @@ public class NetworkManager2 : MonoBehaviour
 
 		rtcConnection.OnConnectionStateChange = state =>
 		{
-			Debug.Log("State" + state);
+			Debug.Log("State " + state);
 		};
 
 		rtcConnection.OnNegotiationNeeded = () =>
@@ -254,7 +254,8 @@ public class NetworkManager2 : MonoBehaviour
 
 	private async void HostLoop()
 	{
-		while (rtcConnection.ConnectionState == RTCPeerConnectionState.Connecting)
+		while (rtcConnection.ConnectionState == RTCPeerConnectionState.Connecting
+			|| rtcConnection.ConnectionState == RTCPeerConnectionState.New)
 		{
 			// Wait for answer or ice
 			LobbyPacket packet = new();
@@ -340,7 +341,8 @@ public class NetworkManager2 : MonoBehaviour
 
 	private async void ClientLoop()
 	{
-		while (rtcConnection.ConnectionState == RTCPeerConnectionState.Connecting)
+		while (rtcConnection.ConnectionState == RTCPeerConnectionState.Connecting
+			|| rtcConnection.ConnectionState == RTCPeerConnectionState.New)
 		{
 			// Wait for ice candidates
 			LobbyPacket packet = new();
@@ -364,7 +366,6 @@ public class NetworkManager2 : MonoBehaviour
 					break;
 				case LobbyPacketType.rtcICE:
 					RtcIcePacket icePacket = new();
-
 					GetPacket(data, icePacket);
 					OnReceiveICE(icePacket);
 					break;
@@ -377,13 +378,20 @@ public class NetworkManager2 : MonoBehaviour
 
 	private void OnReceiveICE(RtcIcePacket packet)
 	{
-		//RTCIceCandidate can = default;
-		//rtcConnection.AddIceCandidate(can);
+		RTCIceCandidateInit init = new()
+		{
+			sdpMid = packet.sdpMid,
+			candidate = packet.candidate,
+			sdpMLineIndex = packet.sdpMLineIndex
+		};
+
+		RTCIceCandidate can = new(init);
+
+		rtcConnection.AddIceCandidate(can);
 	}
 
 	private async void SendICE(RTCIceCandidate candidate)
 	{
-		// Debug.Log(candidate.Candidate);
 		await SendObjectToServer(new RtcIcePacket(candidate, hostCode, 0, !isHost));
 	}
 
