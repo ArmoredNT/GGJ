@@ -20,7 +20,6 @@ public class Timer : MonoBehaviour
     void Update()
     {
         if (currentTime >= 0) currentTime -= Time.deltaTime;
-        else ;
         _text.text = ((int)currentTime).ToString();
     }
 }
