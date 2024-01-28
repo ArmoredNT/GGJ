@@ -416,6 +416,7 @@ public class NetworkManager2 : MonoBehaviour
 					StartCoroutine(ClientAcceptOffer(desc, connection));
 					break;
 				case LobbyPacketType.rtcICE:
+					Debug.Log("Ice");
 					RtcIcePacket icePacket = new();
 					GetPacket(data, icePacket);
 					OnReceiveICE(icePacket, connection);
