@@ -101,10 +101,13 @@ public class NetworkManager2 : MonoBehaviour
 
 		connection.rtcConnection.OnIceCandidate = e =>
 		{
+			Debug.Log(e.Candidate);
 			if (!string.IsNullOrEmpty(e.Candidate))
 			{
 				if (playerNum == -1)
 					SendICE(e, clientPlayerNum);
+				else
+					SendICE(e, playerNum);
 			}
 		};
 
@@ -327,6 +330,7 @@ public class NetworkManager2 : MonoBehaviour
 					RtcIcePacket icePacket = new();
 					GetPacket(data, icePacket);
 					Debug.Log(icePacket.player);
+					
 					OnReceiveICE(icePacket, connections[icePacket.player]);
 					break;
 			}
