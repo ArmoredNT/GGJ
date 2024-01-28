@@ -101,10 +101,13 @@ public class NetworkManager2 : MonoBehaviour
 
 		connection.rtcConnection.OnIceCandidate = e =>
 		{
+			Debug.Log(e.Candidate);
 			if (!string.IsNullOrEmpty(e.Candidate))
 			{
 				if (playerNum == -1)
 					SendICE(e, clientPlayerNum);
+				else
+					SendICE(e, playerNum);
 			}
 		};
 
@@ -265,6 +268,7 @@ public class NetworkManager2 : MonoBehaviour
 			int numCpy = i;
 			connections[i].sendChannel.OnOpen = () =>
 			{
+				Debug.Log(numCpy);
 				connections[numCpy].sendChannel.Send("TEST WOWOWOWOWO!!!");
 			};
 			connections[i].sendChannel.OnMessage = (message) =>
@@ -327,6 +331,7 @@ public class NetworkManager2 : MonoBehaviour
 					RtcIcePacket icePacket = new();
 					GetPacket(data, icePacket);
 					Debug.Log(icePacket.player);
+					
 					OnReceiveICE(icePacket, connections[icePacket.player]);
 					break;
 			}
@@ -416,6 +421,7 @@ public class NetworkManager2 : MonoBehaviour
 					StartCoroutine(ClientAcceptOffer(desc, connection));
 					break;
 				case LobbyPacketType.rtcICE:
+					Debug.Log("Ice");
 					RtcIcePacket icePacket = new();
 					GetPacket(data, icePacket);
 					OnReceiveICE(icePacket, connection);
