@@ -216,7 +216,7 @@ public class NetworkManager2 : MonoBehaviour
 
 	private void GoToPhotos()
 	{
-		GoToScene("Beta_Photos");
+		GoToScene("PhotoSelecter");
 	}
 
 	private void GoToNews()
