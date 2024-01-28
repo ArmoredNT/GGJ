@@ -21,6 +21,7 @@ class RtcConnection
 	}
 }
 
+[RequireComponent(typeof(DontDestroy))]
 public class NetworkManager2 : MonoBehaviour
 {
 	public static NetworkManager2 Instance { get; private set; }
@@ -197,15 +198,40 @@ public class NetworkManager2 : MonoBehaviour
 	#endregion
 
 	#region Host
+	public async void HostLobby()
+	{
+		await InitWebSocket();
+
+		// Send a message to the main server to create a lobby
+		await SendObjectToServer(new LobbyPacket(LobbyPacketType.request));
+
+		// Wait for confirmation
+		LobbyPacketResponse packet = new();
+		await ReceiveObjectFromServer(packet, new byte[64]);
+
+		if (packet.type == LobbyPacketType.response)
+		{
+			if (packet.success)
+			{
+				Debug.Log("Sucessfully created a lobby!");
+				Debug.Log(packet.code);
+				hostCode = packet.code;
+
+				isHost = true;
+
+				GoToLobby();
+			}
+			else
+			{
+				Debug.Log("Failed to create lobby");
+			}
+		}
+	}
+
 	public async void HostStartGame()
 	{
 		Debug.Log("Starting game and connecting peers");
 		await ConnectP2P();
-	}
-
-	public void CreateLobbyDebug()
-	{
-		CreateLobby();
 	}
 
 	// Connect host to each client
@@ -280,36 +306,6 @@ public class NetworkManager2 : MonoBehaviour
 		Debug.Log("Host accepted answer");
 	}
 
-	private async void CreateLobby()
-	{
-		await InitWebSocket();
-
-		// Send a message to the main server to create a lobby
-		await SendObjectToServer(new LobbyPacket(LobbyPacketType.request));
-
-		// Wait for confirmation
-		LobbyPacketResponse packet = new();
-		await ReceiveObjectFromServer(packet, new byte[64]);
-
-		if (packet.type == LobbyPacketType.response)
-		{
-			if (packet.success)
-			{
-				Debug.Log("Sucessfully created a lobby!");
-				Debug.Log(packet.code);
-				hostCode = packet.code;
-
-				isHost = true;
-
-				GoToLobby();
-			}
-			else
-			{
-				Debug.Log("Failed to create lobby");
-			}
-		}
-	}
-
 	private async void HostLoop()
 	{
 		while (true)
@@ -356,16 +352,11 @@ public class NetworkManager2 : MonoBehaviour
 	#endregion
 
 	#region Client
-	public void ConnectClientDebug()
-	{
-		ConnectClient();
-	}
-
-	private async void ConnectClient()
+	public async void ConnectClient()
 	{
 		await InitWebSocket();
 
-		hostCode = lobbyInput.text;
+		hostCode = lobbyInput.text.ToUpper();
 		Debug.Log("Connecting to lobby: " + hostCode);
 		await SendObjectToServer(new LobbyConnectRequest(hostCode));
 
@@ -458,6 +449,7 @@ public class NetworkManager2 : MonoBehaviour
 	}
 	#endregion
 
+	#region Net
 	private void OnReceiveICE(RtcIcePacket packet, RtcConnection connection)
 	{
 		RTCIceCandidateInit init = new()
@@ -504,4 +496,5 @@ public class NetworkManager2 : MonoBehaviour
 		var buffer = new ArraySegment<byte>(encoded, 0, encoded.Length);
 		await webSocket.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);
 	}
+	#endregion
 }
