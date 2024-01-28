@@ -268,6 +268,7 @@ public class NetworkManager2 : MonoBehaviour
 			int numCpy = i;
 			connections[i].sendChannel.OnOpen = () =>
 			{
+				Debug.Log(numCpy);
 				connections[numCpy].sendChannel.Send("TEST WOWOWOWOWO!!!");
 			};
 			connections[i].sendChannel.OnMessage = (message) =>
