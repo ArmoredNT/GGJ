@@ -9,6 +9,18 @@ using System.Threading.Tasks;
 using UnityEngine.SceneManagement;
 using TMPro;
 
+class RtcConnection
+{
+	public RTCPeerConnection rtcConnection;
+	public RTCDataChannel sendChannel;
+
+	public void Close()
+	{
+		sendChannel?.Close();
+		rtcConnection?.Close();
+	}
+}
+
 public class NetworkManager2 : MonoBehaviour
 {
 	public static NetworkManager2 Instance { get; private set; }
@@ -22,12 +34,13 @@ public class NetworkManager2 : MonoBehaviour
 
 	private ClientWebSocket webSocket = null;
 
-	RTCPeerConnection rtcConnection;
-	RTCDataChannel sendChannel;
+	RtcConnection[] connections;
 
 	bool isHost = false;
 	int lobbySize = 0;
 	string hostCode;
+
+	int clientPlayerNum = -1;
 
 	#region Init
 	private void Awake()
@@ -37,8 +50,18 @@ public class NetworkManager2 : MonoBehaviour
 
 	private void OnDestroy()
 	{
-		sendChannel?.Close();
-		rtcConnection?.Close();
+		Disconnect();
+	}
+
+	private void Disconnect()
+	{
+		if (connections != null)
+			foreach (var connection in connections)
+			{
+				connection.Close();
+			}
+
+		connections = null;
 	}
 
 	private async Task InitWebSocket()
@@ -58,13 +81,15 @@ public class NetworkManager2 : MonoBehaviour
 		}
 	}
 
-	private void InitRtc()
+	private RtcConnection InitRtc(int playerNum = -1)
 	{
-		rtcConnection = new RTCPeerConnection();
-		rtcConnection.OnDataChannel = (channel) =>
+		RtcConnection connection = new();
+
+		connection.rtcConnection = new RTCPeerConnection();
+		connection.rtcConnection.OnDataChannel = (channel) =>
 		{
 			Debug.Log("Data channel");
-			sendChannel = channel;
+			connection.sendChannel = channel;
 			channel.OnMessage = (message) =>
 			{
 				Debug.Log(Encoding.UTF8.GetString(message));
@@ -73,25 +98,26 @@ public class NetworkManager2 : MonoBehaviour
 			channel.Send("TEST 2 YAYAYAYYAY!");
 		};
 
-		rtcConnection.OnIceCandidate = e =>
+		connection.rtcConnection.OnIceCandidate = e =>
 		{
 			if (!string.IsNullOrEmpty(e.Candidate))
 			{
-				SendICE(e);
+				if (playerNum == -1)
+					SendICE(e, clientPlayerNum);
 			}
 		};
 
-		rtcConnection.OnIceConnectionChange = state =>
+		connection.rtcConnection.OnIceConnectionChange = state =>
 		{
 			Debug.Log("ICE " + state);
 		};
 
-		rtcConnection.OnConnectionStateChange = state =>
+		connection.rtcConnection.OnConnectionStateChange = state =>
 		{
 			Debug.Log("State " + state);
 		};
 
-		rtcConnection.OnNegotiationNeeded = () =>
+		connection.rtcConnection.OnNegotiationNeeded = () =>
 		{
 			Debug.Log("Negotiation needed!");
 		};
@@ -143,7 +169,9 @@ public class NetworkManager2 : MonoBehaviour
 		}};
 		rtcConfiguration.iceTransportPolicy = RTCIceTransportPolicy.All;
 		rtcConfiguration.iceCandidatePoolSize = 1; // What does this do? idk...
-		rtcConnection.SetConfiguration(ref rtcConfiguration);
+		connection.rtcConnection.SetConfiguration(ref rtcConfiguration);
+
+		return connection;
 	}
 	#endregion
 
@@ -192,44 +220,60 @@ public class NetworkManager2 : MonoBehaviour
 
 		lobbySize = packet.size;
 
-		InitRtc();
-		sendChannel = rtcConnection.CreateDataChannel("sendChannel");
-		sendChannel.OnOpen = () =>
-		{
-			sendChannel.Send("TEST WOWOWOWOWO!!!");
-		};
-		sendChannel.OnMessage = (message) =>
-		{
-			Debug.Log(Encoding.UTF8.GetString(message));
-		};
+		Disconnect();
 
-		StartCoroutine(HostCreateOffer());
+		connections = new RtcConnection[lobbySize];
+
+		for (int i = 0; i < lobbySize; i++)
+		{
+			RtcConnection connection = InitRtc(i);
+			connections[i] = connection;
+		}
+
 		HostLoop();
+
+		for (int i = 0; i < lobbySize; i++)
+		{
+			connections[i].sendChannel = connections[i].rtcConnection.CreateDataChannel("sendChannel");
+			connections[i].sendChannel.OnOpen = () =>
+			{
+				connections[i].sendChannel.Send("TEST WOWOWOWOWO!!!");
+			};
+			connections[i].sendChannel.OnMessage = (message) =>
+			{
+				Debug.Log(Encoding.UTF8.GetString(message));
+			};
+
+			StartCoroutine(HostCreateOffer(connections[i], i));
+
+			await Task.Delay(5000);
+		}
 	}
 
-	private IEnumerator HostCreateOffer()
+	private IEnumerator HostCreateOffer(RtcConnection connection, int playerNum)
 	{
 		// Create offer
-		var op1 = rtcConnection.CreateOffer();
+		var op1 = connection.rtcConnection.CreateOffer();
 		yield return op1;
 
 		// Set local desc
 		RTCSessionDescription desc = op1.Desc;
-		yield return rtcConnection.SetLocalDescription(ref desc);
+		yield return connection.rtcConnection.SetLocalDescription(ref desc);
 
 		// Send offer description
-		Task send = SendObjectToServer(new RtcOfferPacket(hostCode, 0, desc.type, desc.sdp));
+		Debug.Log(playerNum);
+		Task send = SendObjectToServer(new RtcOfferPacket(hostCode, playerNum, desc.type, desc.sdp));
 		yield return new WaitUntil(() => send.IsCompleted);
 
 		Debug.Log("Host sent offer");
 	}
 
-	private void HostAcceptAnswer(RtcAnswerPacket packet)
+	private void HostAcceptAnswer(RtcAnswerPacket packet, RtcConnection connection)
 	{
 		RTCSessionDescription desc = new();
 		desc.type = packet.rtcType;
 		desc.sdp = packet.sdp;
-		rtcConnection.SetRemoteDescription(ref desc);
+		connection.rtcConnection.SetRemoteDescription(ref desc);
 
 		Debug.Log("Host accepted answer");
 	}
@@ -266,8 +310,7 @@ public class NetworkManager2 : MonoBehaviour
 
 	private async void HostLoop()
 	{
-		while (rtcConnection.ConnectionState == RTCPeerConnectionState.Connecting
-			|| rtcConnection.ConnectionState == RTCPeerConnectionState.New)
+		while (true)
 		{
 			// Wait for answer or ice
 			LobbyPacket packet = new();
@@ -279,14 +322,30 @@ public class NetworkManager2 : MonoBehaviour
 				case LobbyPacketType.rtcAnswer:
 					RtcAnswerPacket answerPacket = new();
 					GetPacket(data, answerPacket);
-					HostAcceptAnswer(answerPacket);
+					Debug.Log(answerPacket.player);
+					HostAcceptAnswer(answerPacket, connections[answerPacket.player]);
 					break;
 				case LobbyPacketType.rtcICE:
 					RtcIcePacket icePacket = new();
 					GetPacket(data, icePacket);
-					OnReceiveICE(icePacket);
+					Debug.Log(icePacket.player);
+					OnReceiveICE(icePacket, connections[icePacket.player]);
 					break;
 			}
+
+			//if (connections.Length == 0) break;
+
+			//bool br = true;
+			//foreach (var connection in connections)
+			//{
+			//	if (connection.rtcConnection.ConnectionState == RTCPeerConnectionState.Connecting
+			//		|| connection.rtcConnection.ConnectionState == RTCPeerConnectionState.New)
+			//	{
+			//		br = false;
+			//		break;
+			//	}
+			//}
+			//if (br) break;
 		}
 
 		Debug.Log("Host loop done");
@@ -325,36 +384,18 @@ public class NetworkManager2 : MonoBehaviour
 			}
 		}
 
-		InitRtc();
-		ClientLoop();
+		Disconnect();
+
+		RtcConnection connection = InitRtc();
+		connections = new RtcConnection[1];
+		connections[0] = connection;
+		ClientLoop(connection);
 	}
 
-	private IEnumerator ClientAcceptOffer(RTCSessionDescription desc)
+	private async void ClientLoop(RtcConnection connection)
 	{
-		Debug.Log("Client accepted offer");
-
-		// Set remote desc
-		yield return rtcConnection.SetRemoteDescription(ref desc);
-
-		// Create answer
-		var op1 = rtcConnection.CreateAnswer();
-		yield return op1;
-
-		// Set local desc
-		RTCSessionDescription desc2 = op1.Desc;
-		yield return rtcConnection.SetLocalDescription(ref desc2);
-
-		// Send answer to server
-		Task send = SendObjectToServer(new RtcAnswerPacket(hostCode, desc2.type, desc2.sdp));
-		yield return new WaitUntil(() => send.IsCompleted);
-
-		Debug.Log("Client sent answer");
-	}
-
-	private async void ClientLoop()
-	{
-		while (rtcConnection.ConnectionState == RTCPeerConnectionState.Connecting
-			|| rtcConnection.ConnectionState == RTCPeerConnectionState.New)
+		while (connection.rtcConnection.ConnectionState == RTCPeerConnectionState.Connecting
+			|| connection.rtcConnection.ConnectionState == RTCPeerConnectionState.New)
 		{
 			// Wait for ice candidates
 			LobbyPacket packet = new();
@@ -368,27 +409,53 @@ public class NetworkManager2 : MonoBehaviour
 					RtcOfferPacket offerPacket = new();
 					GetPacket(data, offerPacket);
 
+					// Get my player num
+					clientPlayerNum = offerPacket.player;
+					Debug.Log("I'm player #" + offerPacket.player);
+
 					RTCSessionDescription desc = new()
 					{
 						type = offerPacket.rtcType,
 						sdp = offerPacket.sdp
 					};
 
-					StartCoroutine(ClientAcceptOffer(desc));
+					StartCoroutine(ClientAcceptOffer(desc, connection));
 					break;
 				case LobbyPacketType.rtcICE:
 					RtcIcePacket icePacket = new();
 					GetPacket(data, icePacket);
-					OnReceiveICE(icePacket);
+					OnReceiveICE(icePacket, connection);
 					break;
 			}
 		}
 
 		Debug.Log("Client loop done");
 	}
+
+	private IEnumerator ClientAcceptOffer(RTCSessionDescription desc, RtcConnection connection)
+	{
+		Debug.Log("Client accepted offer");
+
+		// Set remote desc
+		yield return connection.rtcConnection.SetRemoteDescription(ref desc);
+
+		// Create answer
+		var op1 = connection.rtcConnection.CreateAnswer();
+		yield return op1;
+
+		// Set local desc
+		RTCSessionDescription desc2 = op1.Desc;
+		yield return connection.rtcConnection.SetLocalDescription(ref desc2);
+
+		// Send answer to server
+		Task send = SendObjectToServer(new RtcAnswerPacket(hostCode, clientPlayerNum, desc2.type, desc2.sdp));
+		yield return new WaitUntil(() => send.IsCompleted);
+
+		Debug.Log("Client sent answer");
+	}
 	#endregion
 
-	private void OnReceiveICE(RtcIcePacket packet)
+	private void OnReceiveICE(RtcIcePacket packet, RtcConnection connection)
 	{
 		RTCIceCandidateInit init = new()
 		{
@@ -399,12 +466,12 @@ public class NetworkManager2 : MonoBehaviour
 
 		RTCIceCandidate can = new(init);
 
-		rtcConnection.AddIceCandidate(can);
+		connection.rtcConnection.AddIceCandidate(can);
 	}
 
-	private async void SendICE(RTCIceCandidate candidate)
+	private async void SendICE(RTCIceCandidate candidate, int playerNum)
 	{
-		await SendObjectToServer(new RtcIcePacket(candidate, hostCode, 0, !isHost));
+		await SendObjectToServer(new RtcIcePacket(candidate, hostCode, playerNum, !isHost));
 	}
 
 
