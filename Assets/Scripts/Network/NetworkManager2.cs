@@ -232,12 +232,14 @@ public class NetworkManager2 : MonoBehaviour
 
 		HostLoop();
 
+		// Connect to each player
 		for (int i = 0; i < lobbySize; i++)
 		{
 			connections[i].sendChannel = connections[i].rtcConnection.CreateDataChannel("sendChannel");
+			int numCpy = i;
 			connections[i].sendChannel.OnOpen = () =>
 			{
-				connections[i].sendChannel.Send("TEST WOWOWOWOWO!!!");
+				connections[numCpy].sendChannel.Send("TEST WOWOWOWOWO!!!");
 			};
 			connections[i].sendChannel.OnMessage = (message) =>
 			{
@@ -246,7 +248,7 @@ public class NetworkManager2 : MonoBehaviour
 
 			StartCoroutine(HostCreateOffer(connections[i], i));
 
-			await Task.Delay(5000);
+			// await Task.Delay(5000);
 		}
 	}
 
@@ -333,19 +335,20 @@ public class NetworkManager2 : MonoBehaviour
 					break;
 			}
 
-			//if (connections.Length == 0) break;
+			if (connections.Length == 0) break;
 
-			//bool br = true;
-			//foreach (var connection in connections)
-			//{
-			//	if (connection.rtcConnection.ConnectionState == RTCPeerConnectionState.Connecting
-			//		|| connection.rtcConnection.ConnectionState == RTCPeerConnectionState.New)
-			//	{
-			//		br = false;
-			//		break;
-			//	}
-			//}
-			//if (br) break;
+			bool br = true;
+			foreach (var connection in connections)
+			{
+				if (connection.rtcConnection.ConnectionState == RTCPeerConnectionState.Connecting
+					|| connection.rtcConnection.ConnectionState == RTCPeerConnectionState.New)
+				{
+					br = false;
+					break;
+				}
+			}
+			// Exit loop when we've connected
+			if (br) break;
 		}
 
 		Debug.Log("Host loop done");
