@@ -492,6 +492,8 @@ public class NetworkManager2 : MonoBehaviour
 
 			yield return new WaitForSeconds(60);
 		}
+
+		Debug.Log("Game done!");
 	}
 	#endregion
 
@@ -632,16 +634,16 @@ public class NetworkManager2 : MonoBehaviour
 					case "NEWS":
 						GoToNews();
 						break;
-					case "NEWSROOM_PROMPT":
-						SetNewsRoomPrompt(m.message);
-						break;
-					case "NEWSROOM_IMAGE":
-						SetNewsRoomImage(m.message);
-						break;
 				}
 				break;
 			case "PHOTOGRAPHER":
 				SetPhotoPrompt(m.message);
+				break;
+			case "NEWSROOM_PROMPT":
+				SetNewsRoomPrompt(m.message);
+				break;
+			case "NEWSROOM_IMAGE":
+				SetNewsRoomImage(m.message);
 				break;
 		}
 	}
@@ -684,6 +686,7 @@ public class NetworkManager2 : MonoBehaviour
 	private void SetNewsRoomPrompt(string prompt)
 	{
 		// todo
+		Debug.Log("Setting prompt to " + prompt);
 		NewsMaker.instance.SetHeadline(prompt);
 	}
 

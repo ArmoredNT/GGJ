@@ -994,7 +994,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   customLobbyServerAddr: ws://127.0.0.1
-  useCustomAddr: 1
+  useCustomAddr: 0
   lobbyInput: {fileID: 1566072311}
 --- !u!114 &549839310
 MonoBehaviour:
