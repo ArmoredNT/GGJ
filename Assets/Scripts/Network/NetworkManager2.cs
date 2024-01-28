@@ -474,6 +474,7 @@ public class NetworkManager2 : MonoBehaviour
 
 	public void AllClientsInNewsRoom()
 	{
+		Debug.Log("All clients in news room");
 		StartCoroutine(NewsRoomTimer());
 	}
 
@@ -485,6 +486,9 @@ public class NetworkManager2 : MonoBehaviour
 
 			SendDataToAllClients("NEWSROOM_PROMPT:" + combo.prompt);
 			SendDataToAllClients("NEWSROOM_IMAGE:" + combo.url);
+
+			SetNewsRoomImage(combo.url);
+			SetNewsRoomPrompt(combo.prompt);
 
 			yield return new WaitForSeconds(60);
 		}
@@ -680,11 +684,13 @@ public class NetworkManager2 : MonoBehaviour
 	private void SetNewsRoomPrompt(string prompt)
 	{
 		// todo
+		NewsMaker.instance.SetHeadline(prompt);
 	}
 
 	private void SetNewsRoomImage(string url)
 	{
 		// todo
+		NewsMaker.instance.SetImage(url);
 	}
 
 	public void SendChosenUrl(string url)
