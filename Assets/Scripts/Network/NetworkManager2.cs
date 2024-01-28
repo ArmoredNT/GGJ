@@ -95,18 +95,6 @@ public class NetworkManager2 : MonoBehaviour
 		RtcConnection connection = new();
 
 		connection.rtcConnection = new RTCPeerConnection();
-		connection.rtcConnection.OnDataChannel = (channel) =>
-		{
-			Debug.Log("Data channel");
-			connection.sendChannel = channel;
-			connection.sendOpen = true;
-			connection.sendChannel.OnMessage = (message) =>
-			{
-				Debug.Log(Encoding.UTF8.GetString(message));
-			};
-
-			connection.sendChannel.Send("TEST 2 YAYAYAYYAY!");
-		};
 
 		connection.rtcConnection.OnIceCandidate = e =>
 		{
@@ -199,13 +187,28 @@ public class NetworkManager2 : MonoBehaviour
 		}
 	}
 
-	private void GoToLobby()
+	private void GoToScene(string name)
 	{
-		var op = SceneManager.LoadSceneAsync("Beta_Lobby");
+		var op = SceneManager.LoadSceneAsync(name);
 		op.completed += (x) =>
 		{
 			OnSceneLoad();
 		};
+	}
+
+	private void GoToLobby()
+	{
+		GoToScene("LobbyUI");
+	}
+
+	private void GoToIntro()
+	{
+		GoToScene("Beta_Intro");
+	}
+
+	private void GoToPrompt()
+	{
+		GoToScene("Beta_Prompt");
 	}
 	#endregion
 
@@ -246,6 +249,12 @@ public class NetworkManager2 : MonoBehaviour
 		await ConnectP2P();
 	}
 
+	public void HostEndIntro()
+	{
+		SendDataToAllClients("GOTO PROMPT");
+		GoToPrompt();
+	}
+
 	// Connect host to each client
 	private async Task ConnectP2P()
 	{
@@ -280,11 +289,11 @@ public class NetworkManager2 : MonoBehaviour
 				Debug.Log("Open");
 				con.sendOpen = true;
 				con.sendChannel.Send("TEST WOWOWOWOWO!!!");
-
 			};
+			int numCpy = i; // Unless we do this stuff breaks
 			con.sendChannel.OnMessage = (message) =>
 			{
-				Debug.Log(Encoding.UTF8.GetString(message));
+				OnMessageFromClient(message, numCpy, con);
 			};
 
 			StartCoroutine(HostCreateOffer(con, i));
@@ -293,6 +302,11 @@ public class NetworkManager2 : MonoBehaviour
 		}
 
 		StartCoroutine(WaitTillAllClientsDone());
+	}
+
+	private void OnMessageFromClient(byte[] message, int playerNum, RtcConnection con)
+	{
+		Debug.Log(Encoding.UTF8.GetString(message));
 	}
 
 	IEnumerator WaitTillAllClientsDone()
@@ -311,11 +325,15 @@ public class NetworkManager2 : MonoBehaviour
 		}
 		Debug.Log("All connected");
 
-		SendDataToAllClients("GAME START");
+		SendDataToAllClients("GOTO INTRO");
+
+		GoToIntro();
 	}
 
 	private void SendDataToAllClients(string message)
 	{
+		Debug.Log(message);
+
 		foreach (var connection in connections)
 		{
 			connection.sendChannel.Send(message);
@@ -413,6 +431,19 @@ public class NetworkManager2 : MonoBehaviour
 		Disconnect();
 
 		RtcConnection connection = InitRtc();
+		connection.rtcConnection.OnDataChannel = (channel) =>
+		{
+			Debug.Log("Data channel");
+			connection.sendChannel = channel;
+			connection.sendOpen = true;
+			connection.sendChannel.OnMessage = (message) =>
+			{
+				OnMessageFromServer(message);
+			};
+
+			connection.sendChannel.Send("TEST 2 YAYAYAYYAY!");
+		};
+
 		connections = new RtcConnection[1];
 		connections[0] = connection;
 		ClientLoop(connection);
@@ -479,6 +510,22 @@ public class NetworkManager2 : MonoBehaviour
 		yield return new WaitUntil(() => send.IsCompleted);
 
 		Debug.Log("Client sent answer");
+	}
+
+	private void OnMessageFromServer(byte[] message)
+	{
+		string s = Encoding.UTF8.GetString(message);
+		Debug.Log(s);
+
+		switch (s)
+		{
+			case "GOTO INTRO":
+				GoToIntro();
+				break;
+			case "GOTO PROMPT":
+				GoToPrompt();
+				break;
+		}
 	}
 	#endregion
 
