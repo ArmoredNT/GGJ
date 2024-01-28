@@ -78,7 +78,6 @@ public class ImageHandler : MonoBehaviour
             rawImage.texture = texture;
             image.SetTexture(texture);
             rawImage.SetNativeSize();
-            print(rawImage.uvRect);
         }
     }
     
