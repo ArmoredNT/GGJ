@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class Timer : MonoBehaviour
 {
+    [SerializeField] private PromptHandler ph;
     [SerializeField] float maxTime = 60;
     private float currentTime;
 
@@ -20,6 +21,10 @@ public class Timer : MonoBehaviour
     void Update()
     {
         if (currentTime >= 0) currentTime -= Time.deltaTime;
+        else
+        {
+            ph.FinishedPrompt();
+        }
         _text.text = ((int)currentTime).ToString();
     }
 }
