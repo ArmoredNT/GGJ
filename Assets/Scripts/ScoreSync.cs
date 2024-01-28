@@ -9,11 +9,11 @@ using TMPro;
 public class ScoreSync : MonoBehaviourPunCallbacks, IPunObservable
 {
     private int playerScore = 0;
-    private TextMeshProUGUI text;
+    private TextMeshProUGUI _text;
 
     private void Start()
     {
-        text = GetComponent<TextMeshProUGUI>();
+        _text = GetComponent<TextMeshProUGUI>();
         // Initialize the score
         playerScore = 0;
 
@@ -22,7 +22,7 @@ public class ScoreSync : MonoBehaviourPunCallbacks, IPunObservable
         {
             // Set the player's unique score on start
             photonView.RPC("InitializeScore", RpcTarget.AllBuffered, playerScore);
-            text.text = playerScore.ToString();
+            _text.text = playerScore.ToString();
         }
     }
 
@@ -33,22 +33,23 @@ public class ScoreSync : MonoBehaviourPunCallbacks, IPunObservable
         {
             playerScore++;
             photonView.RPC("UpdateScore", RpcTarget.AllBuffered, playerScore);
-            text.text = playerScore.ToString();
+            _text.text = playerScore.ToString();
         }
     }
 
     [PunRPC]
     void InitializeScore(int newScore)
     {
+        _text = GetComponent<TextMeshProUGUI>();
         playerScore = newScore;
-        text.text = playerScore.ToString();
+        _text.text = playerScore.ToString();
     }
 
     [PunRPC]
     void UpdateScore(int newScore)
     {
         playerScore = newScore;
-        text.text = playerScore.ToString();
+        _text.text = playerScore.ToString();
     }
 
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
