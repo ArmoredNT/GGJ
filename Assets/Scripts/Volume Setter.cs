@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class VolumeSetter : MonoBehaviour
 {
-    [SerializeField] private AudioSource audio;
+	[SerializeField] private new AudioSource audio;
     // Start is called before the first frame update
     void Start()
     {

@@ -208,7 +208,7 @@ public class NetworkManager2 : MonoBehaviour
 
 	private void GoToPrompt()
 	{
-		GoToScene("Beta_Prompt");
+		GoToScene("PromptCreator");
 	}
 	#endregion
 
