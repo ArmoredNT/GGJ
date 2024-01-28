@@ -17,7 +17,8 @@ public class PromptHandler : MonoBehaviour
         {
             called = true;
             prompt = input.text;
-            print(prompt);
+
+            NetworkManager2.Instance.SendPrompt(prompt);
         }
     }
 

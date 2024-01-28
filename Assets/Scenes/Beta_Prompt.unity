@@ -174,7 +174,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ph: {fileID: 1292869452}
-  maxTime: 10
+  maxTime: 120
   _text: {fileID: 116576775}
 --- !u!114 &116576775
 MonoBehaviour:

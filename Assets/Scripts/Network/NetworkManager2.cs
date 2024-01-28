@@ -251,7 +251,7 @@ public class NetworkManager2 : MonoBehaviour
 
 	public void HostEndIntro()
 	{
-		SendDataToAllClients("GOTO PROMPT");
+		SendDataToAllClients("GOTO:PROMPT");
 		GoToPrompt();
 	}
 
@@ -306,7 +306,16 @@ public class NetworkManager2 : MonoBehaviour
 
 	private void OnMessageFromClient(byte[] message, int playerNum, RtcConnection con)
 	{
-		Debug.Log(Encoding.UTF8.GetString(message));
+		string s = Encoding.UTF8.GetString(message);
+		Debug.Log(s);
+		DeconstructedMessage m = GetMessageType(s);
+
+		switch (m.type)
+		{
+			case "PROMPT":
+				HostAddPrompt(playerNum, m.message);
+				break;
+		}
 	}
 
 	IEnumerator WaitTillAllClientsDone()
@@ -325,8 +334,7 @@ public class NetworkManager2 : MonoBehaviour
 		}
 		Debug.Log("All connected");
 
-		SendDataToAllClients("GOTO INTRO");
-
+		SendDataToAllClients("GOTO:INTRO");
 		GoToIntro();
 	}
 
@@ -398,6 +406,11 @@ public class NetworkManager2 : MonoBehaviour
 		}
 
 		Debug.Log("Host loop done");
+	}
+
+	private void HostAddPrompt(int playerID, string prompt)
+	{
+		Debug.Log(string.Format("Got prompt {0} from {1}", prompt, playerID));
 	}
 	#endregion
 
@@ -517,19 +530,77 @@ public class NetworkManager2 : MonoBehaviour
 		string s = Encoding.UTF8.GetString(message);
 		Debug.Log(s);
 
-		switch (s)
+		DeconstructedMessage m = GetMessageType(s);
+		Debug.Log(m.type);
+		Debug.Log(m.message);
+
+		switch (m.type)
 		{
-			case "GOTO INTRO":
-				GoToIntro();
-				break;
-			case "GOTO PROMPT":
-				GoToPrompt();
+			case "GOTO":
+				switch (m.message)
+				{
+					case "INTRO":
+						GoToIntro();
+						break;
+					case "PROMPT":
+						GoToPrompt();
+						break;
+				}
 				break;
 		}
 	}
+
+	void ClientSendToServer(string message)
+	{
+		connections[0].sendChannel.Send(Encoding.UTF8.GetBytes(message));
+	}
+
+	private void ClientSendPrompt(string prompt)
+	{
+		ClientSendToServer("PROMPT:" + prompt);
+	}
 	#endregion
 
+	public void SendPrompt(string prompt)
+	{
+		if (!isHost)
+		{
+			ClientSendPrompt(prompt);
+		}
+		else
+		{
+			HostAddPrompt(-1, prompt);
+		}
+	}
+
 	#region Net
+	struct DeconstructedMessage
+	{
+		public string type;
+		public string message;
+	}
+
+	private DeconstructedMessage GetMessageType(string message)
+	{
+		int index = message.IndexOf(':');
+		Debug.Log(message);
+		Debug.Log(index);
+
+		var m = new DeconstructedMessage();
+
+		if (index == -1)
+		{
+			m.type = "";
+			m.message = message;
+			return m;
+		}
+
+		m.type = message[..index];
+		m.message = message[(index + 1)..];
+
+		return m;
+	}
+
 	private void OnReceiveICE(RtcIcePacket packet, RtcConnection connection)
 	{
 		RTCIceCandidateInit init = new()
