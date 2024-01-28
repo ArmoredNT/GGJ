@@ -65,6 +65,57 @@ public class NetworkManager : MonoBehaviour
 			if (!string.IsNullOrEmpty(e.Candidate))
 				rtcConnection.AddIceCandidate(e);
 		};
+
+		rtcConnection.OnIceConnectionChange = state =>
+		{
+			Debug.Log(state);
+		};
+
+		rtcConnection.OnConnectionStateChange = state =>
+		{
+			Debug.Log(state);
+		};
+
+		RTCConfiguration rtcConfiguration = new RTCConfiguration();
+		rtcConfiguration.iceServers = new RTCIceServer[] { new() {
+			urls = new string[]
+			{
+				"stun:stun.relay.metered.ca:80"
+			}
+		},
+		new() {
+			urls = new string[]
+			{
+				"turn:standard.relay.metered.ca:80"
+			},
+			username = "bb975cabc169e1c48aa23c54",
+			credential = "eAFvAGwqqhORmq+x"
+		},
+		new() {
+			urls = new string[]
+			{
+				"turn:standard.relay.metered.ca:80?transport=tcp"
+			},
+			username = "bb975cabc169e1c48aa23c54",
+			credential = "eAFvAGwqqhORmq+x"
+		},
+		new() {
+			urls = new string[]
+			{
+				"turn:standard.relay.metered.ca:443"
+			},
+			username = "bb975cabc169e1c48aa23c54",
+			credential = "eAFvAGwqqhORmq+x"
+		},
+		new() {
+			urls = new string[]
+			{
+				"turns:standard.relay.metered.ca:443?transport=tcp"
+			},
+			username = "bb975cabc169e1c48aa23c54",
+			credential = "eAFvAGwqqhORmq+x"
+		}};
+		rtcConnection.SetConfiguration(ref rtcConfiguration);
 	}
 	#endregion
 
@@ -113,7 +164,6 @@ public class NetworkManager : MonoBehaviour
 		lobbySize = packet.size;
 
 		InitRtc();
-
 		sendChannel = rtcConnection.CreateDataChannel("sendChannel");
 		sendChannel.OnOpen = () =>
 		{
@@ -137,25 +187,19 @@ public class NetworkManager : MonoBehaviour
 		yield return new WaitUntil(() => send.IsCompleted);
 
 		// Wait for answer
-		RtcAnswerPacket packet = new RtcAnswerPacket("", RTCSdpType.Offer, "");
+		RtcAnswerPacket packet = new("", RTCSdpType.Offer, "");
 		Task receive = ReceiveObjectFromServer(2048, packet);
 		yield return new WaitUntil(() => receive.IsCompleted);
 
-		RTCSessionDescription desc2 = new RTCSessionDescription();
+		RTCSessionDescription desc2 = new();
 		desc2.type = packet.rtcType;
 		desc2.sdp = packet.sdp;
 		rtcConnection.SetRemoteDescription(ref desc2);
 
 		Debug.Log("RTC Connected");
 
-		//var op3 = remoteConnection.SetRemoteDescription(ref op1.desc);
-		//yield return op3;
-		//var op4 = remoteConnection.CreateAnswer();
-		//yield return op4;
-		//var op5 = remoteConnection.setLocalDescription(op4.desc);
-		//yield return op5;
-		//var op6 = rtcConnection.setRemoteDescription(op4.desc);
-		//yield return op6;
+		Debug.Log("Local " + rtcConnection.LocalDescription.sdp);
+		Debug.Log("Remote " + rtcConnection.RemoteDescription.sdp);
 	}
 
 	private async void CreateLobby()
@@ -200,16 +244,16 @@ public class NetworkManager : MonoBehaviour
 		await InitWebSocket();
 
 		hostCode = lobbyInput.text;
-		Debug.Log("Connection to lobby: " + hostCode);
+		Debug.Log("Connecting to lobby: " + hostCode);
 		await SendObjectToServer(new LobbyConnectRequest(hostCode));
 
 		// Wait for confirmation
-		LobbyConnectResponse packet = new();
-		await ReceiveObjectFromServer(64, packet);
+		LobbyConnectResponse connectPacket = new();
+		await ReceiveObjectFromServer(64, connectPacket);
 
-		if (packet.type == LobbyPacketType.connectRes)
+		if (connectPacket.type == LobbyPacketType.connectRes)
 		{
-			if (packet.success)
+			if (connectPacket.success)
 			{
 				Debug.Log("Sucessfully joined lobbby!");
 				GoToLobby();
@@ -221,8 +265,25 @@ public class NetworkManager : MonoBehaviour
 			}
 		}
 
-		// Start client lobby loop
-		ClientLobbyLoop();
+		// Wait for confirmation
+		RtcOfferPacket packet = new(hostCode, 0, RTCSdpType.Offer, "");
+		await ReceiveObjectFromServer(2048, packet);
+
+		switch (packet.type)
+		{
+			case LobbyPacketType.rtcOffer:
+				RtcOfferPacket rtcPacket = packet;
+
+				RTCSessionDescription desc = new();
+				desc.type = rtcPacket.rtcType;
+				desc.sdp = rtcPacket.sdp;
+
+				Debug.Log("Connecting to host");
+
+				InitRtc();
+				StartCoroutine(ClientHandshake(desc));
+				break;
+		}
 	}
 
 	[Serializable]
@@ -230,32 +291,6 @@ public class NetworkManager : MonoBehaviour
 	{
 		public RTCSdpType type;
 		public string sdp;
-	}
-
-	private async void ClientLobbyLoop()
-	{
-		while (true)
-		{
-			// Wait for confirmation
-			RtcOfferPacket packet = new(hostCode, 0, RTCSdpType.Offer, "");
-			await ReceiveObjectFromServer(2048, packet);
-
-			switch (packet.type)
-			{
-				case LobbyPacketType.rtcOffer:
-					RtcOfferPacket rtcPacket = packet;
-
-					RTCSessionDescription desc = new();
-					desc.type = rtcPacket.rtcType;
-					desc.sdp = rtcPacket.sdp;
-
-					Debug.Log("Connecting to host");
-
-					InitRtc();
-					StartCoroutine(ClientHandshake(desc));
-					break;
-			}
-		}
 	}
 
 	// After receiving offer from server
@@ -271,6 +306,10 @@ public class NetworkManager : MonoBehaviour
 		// Send answer to server
 		Task send = SendObjectToServer(new RtcAnswerPacket(hostCode, desc2.type, desc2.sdp));
 		yield return new WaitUntil(() => send.IsCompleted);
+
+		Debug.Log("Local " + rtcConnection.LocalDescription.sdp);
+		Debug.Log("Remote " + rtcConnection.RemoteDescription.sdp);
+		Debug.Log("Client handshake done");
 	}
 	#endregion
 
