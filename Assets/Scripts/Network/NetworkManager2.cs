@@ -13,11 +13,19 @@ class RtcConnection
 {
 	public RTCPeerConnection rtcConnection;
 	public RTCDataChannel sendChannel;
+	public bool sendOpen = false;
 
 	public void Close()
 	{
 		sendChannel?.Close();
 		rtcConnection?.Close();
+	}
+
+	public bool NotFullyConnected()
+	{
+		return rtcConnection.ConnectionState == RTCPeerConnectionState.Connecting
+			|| rtcConnection.ConnectionState == RTCPeerConnectionState.New
+			|| !sendOpen;
 	}
 }
 
@@ -91,12 +99,13 @@ public class NetworkManager2 : MonoBehaviour
 		{
 			Debug.Log("Data channel");
 			connection.sendChannel = channel;
-			channel.OnMessage = (message) =>
+			connection.sendOpen = true;
+			connection.sendChannel.OnMessage = (message) =>
 			{
 				Debug.Log(Encoding.UTF8.GetString(message));
 			};
 
-			channel.Send("TEST 2 YAYAYAYYAY!");
+			connection.sendChannel.Send("TEST 2 YAYAYAYYAY!");
 		};
 
 		connection.rtcConnection.OnIceCandidate = e =>
@@ -255,8 +264,7 @@ public class NetworkManager2 : MonoBehaviour
 
 		for (int i = 0; i < lobbySize; i++)
 		{
-			RtcConnection connection = InitRtc(i);
-			connections[i] = connection;
+			connections[i] = InitRtc(i);
 		}
 
 		HostLoop();
@@ -264,21 +272,53 @@ public class NetworkManager2 : MonoBehaviour
 		// Connect to each player
 		for (int i = 0; i < lobbySize; i++)
 		{
-			connections[i].sendChannel = connections[i].rtcConnection.CreateDataChannel("sendChannel");
-			int numCpy = i;
-			connections[i].sendChannel.OnOpen = () =>
+			RtcConnection con = connections[i];
+
+			con.sendChannel = con.rtcConnection.CreateDataChannel("sendChannel");
+			con.sendChannel.OnOpen = () =>
 			{
-				Debug.Log(numCpy);
-				connections[numCpy].sendChannel.Send("TEST WOWOWOWOWO!!!");
+				Debug.Log("Open");
+				con.sendOpen = true;
+				con.sendChannel.Send("TEST WOWOWOWOWO!!!");
+
 			};
-			connections[i].sendChannel.OnMessage = (message) =>
+			con.sendChannel.OnMessage = (message) =>
 			{
 				Debug.Log(Encoding.UTF8.GetString(message));
 			};
 
-			StartCoroutine(HostCreateOffer(connections[i], i));
+			StartCoroutine(HostCreateOffer(con, i));
 
 			// await Task.Delay(5000);
+		}
+
+		StartCoroutine(WaitTillAllClientsDone());
+	}
+
+	IEnumerator WaitTillAllClientsDone()
+	{
+		while (true)
+		{
+			bool notConnected = false;
+			foreach (var connection in connections)
+			{
+				notConnected |= connection.NotFullyConnected();
+			}
+
+			if (!notConnected) break;
+
+			yield return null;
+		}
+		Debug.Log("All connected");
+
+		SendDataToAllClients("GAME START");
+	}
+
+	private void SendDataToAllClients(string message)
+	{
+		foreach (var connection in connections)
+		{
+			connection.sendChannel.Send(message);
 		}
 	}
 
@@ -331,25 +371,12 @@ public class NetworkManager2 : MonoBehaviour
 					RtcIcePacket icePacket = new();
 					GetPacket(data, icePacket);
 					Debug.Log(icePacket.player);
-					
+
 					OnReceiveICE(icePacket, connections[icePacket.player]);
 					break;
 			}
 
 			if (connections.Length == 0) break;
-
-			bool br = true;
-			foreach (var connection in connections)
-			{
-				if (connection.rtcConnection.ConnectionState == RTCPeerConnectionState.Connecting
-					|| connection.rtcConnection.ConnectionState == RTCPeerConnectionState.New)
-				{
-					br = false;
-					break;
-				}
-			}
-			// Exit loop when we've connected
-			if (br) break;
 		}
 
 		Debug.Log("Host loop done");

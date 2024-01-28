@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 class SavedImage
@@ -52,9 +53,11 @@ public class ImageHandler : MonoBehaviour
 
     [SerializeField] private Image sampleMask;
     [SerializeField] private RawImage rawImage;
-    [SerializeField] private RawImage screen;
+    //[SerializeField] private RawImage screen;
 
     private SavedImage image;
+
+    private bool called;
 
     private void Start()
     {
@@ -87,12 +90,20 @@ public class ImageHandler : MonoBehaviour
 
     public void EndEdit()
     {
-        image.SetScale(rawImage.transform.localScale.x);
-        image.SetPos(rawImage.transform.localPosition);
+        if (!called)
+        {
+            called = true;
+            image.SetScale(rawImage.transform.localScale.x);
+            image.SetPos(rawImage.transform.localPosition);
+        }
+        // screen.texture = image.GetTexture();
+        // screen.SetNativeSize();
+        // screen.transform.localScale = new Vector3(image.GetScale(), image.GetScale(), 1);
+        // screen.transform.localPosition = image.GetPos();
+    }
 
-        screen.texture = image.GetTexture();
-        screen.SetNativeSize();
-        screen.transform.localScale = new Vector3(image.GetScale(), image.GetScale(), 1);
-        screen.transform.localPosition = image.GetPos();
+    public void LoadNextScene()
+    {
+        SceneManager.LoadScene("NewsRoom");
     }
 }
