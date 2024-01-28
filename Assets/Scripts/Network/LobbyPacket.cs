@@ -95,6 +95,10 @@ public class RtcOfferPacket : LobbyPacket
 	public RTCSdpType rtcType;
 	public string sdp;
 
+	public RtcOfferPacket()
+	{
+	}
+
 	public RtcOfferPacket(string code, int targetPlayer, RTCSdpType rtcType, string sdp) : base(LobbyPacketType.rtcOffer)
 	{
 		this.code = code;
@@ -111,6 +115,10 @@ public class RtcAnswerPacket : LobbyPacket
 	public RTCSdpType rtcType;
 	public string sdp;
 
+	public RtcAnswerPacket()
+	{
+	}
+
 	public RtcAnswerPacket(string code, RTCSdpType rtcType, string sdp) : base(LobbyPacketType.rtcAnswer)
 	{
 		this.rtcType = rtcType;
@@ -122,14 +130,24 @@ public class RtcAnswerPacket : LobbyPacket
 [System.Serializable]
 public class RtcIcePacket : LobbyPacket
 {
-	public string ice;
+	public string candidate;
+	public string sdpMid;
+	public int? sdpMLineIndex;
 	public string code;
 	public int player;
+	public bool toHost = false;
 
-	public RtcIcePacket(string ice, string code, int player) : base(LobbyPacketType.rtcICE)
+	public RtcIcePacket()
 	{
-		this.ice = ice;
+	}
+
+	public RtcIcePacket(RTCIceCandidate candidate, string code, int player, bool toHost) : base(LobbyPacketType.rtcICE)
+	{
+		this.candidate = candidate.Candidate;
+		this.sdpMid = candidate.SdpMid;
+		this.sdpMLineIndex = candidate.SdpMLineIndex;
 		this.code = code;
 		this.player = player;
+		this.toHost = toHost;
 	}
 }

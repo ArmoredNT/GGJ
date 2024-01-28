@@ -384,7 +384,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 524318147}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1d57a8fc848cccc428c1ce0dcda84c77, type: 3}
+  m_Script: {fileID: 11500000, guid: 53c69e53646b8064db49cdaf445c59a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   customLobbyServerAddr: ws://127.0.0.1
@@ -1051,7 +1051,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 524318151}
-        m_TargetAssemblyTypeName: NetworkManager, Assembly-CSharp
+        m_TargetAssemblyTypeName: NetworkManager2, Assembly-CSharp
         m_MethodName: ConnectClientDebug
         m_Mode: 1
         m_Arguments:
@@ -1448,7 +1448,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 524318151}
-        m_TargetAssemblyTypeName: NetworkManager, Assembly-CSharp
+        m_TargetAssemblyTypeName: NetworkManager2, Assembly-CSharp
         m_MethodName: CreateLobbyDebug
         m_Mode: 1
         m_Arguments:

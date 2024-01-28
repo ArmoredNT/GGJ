@@ -6,6 +6,6 @@ public class GameStarter : MonoBehaviour
 {
 	public void StartGame()
 	{
-		NetworkManager.Instance.HostStartGame();
+		NetworkManager2.Instance.HostStartGame();
 	}
 }
