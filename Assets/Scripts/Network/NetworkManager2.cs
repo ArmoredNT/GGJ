@@ -8,6 +8,8 @@ using System.Collections;
 using System.Threading.Tasks;
 using UnityEngine.SceneManagement;
 using TMPro;
+using Unity.VisualScripting;
+using Unity.Burst.Intrinsics;
 
 class RtcConnection
 {
@@ -219,7 +221,7 @@ public class NetworkManager2 : MonoBehaviour
 
 	private void GoToNews()
 	{
-		GoToScene("Beta_News");
+		GoToScene("NewsRoom");
 	}
 	#endregion
 
@@ -330,6 +332,9 @@ public class NetworkManager2 : MonoBehaviour
 				break;
 			case "IMAGE":
 				host.AddUrl(playerNum, m.message);
+				break;
+			case "LOADED_NEWSROOM":
+				host.ClientLoadedNewsRoom();
 				break;
 		}
 	}
@@ -465,6 +470,24 @@ public class NetworkManager2 : MonoBehaviour
 		Debug.Log("Photos");
 		SendDataToAllClients("GOTO:PHOTOS");
 		GoToPhotos();
+	}
+
+	public void AllClientsInNewsRoom()
+	{
+		StartCoroutine(NewsRoomTimer());
+	}
+
+	IEnumerator NewsRoomTimer()
+	{
+		for (int i = 0; i < host.GetPlayerCount(); ++i)
+		{
+			Host.PromptAndImageCombo combo = host.GetNextPromptAndImage();
+
+			SendDataToAllClients("NEWSROOM_PROMPT:" + combo.prompt);
+			SendDataToAllClients("NEWSROOM_IMAGE:" + combo.url);
+
+			yield return new WaitForSeconds(60);
+		}
 	}
 	#endregion
 
@@ -605,6 +628,12 @@ public class NetworkManager2 : MonoBehaviour
 					case "NEWS":
 						GoToNews();
 						break;
+					case "NEWSROOM_PROMPT":
+						SetNewsRoomPrompt(m.message);
+						break;
+					case "NEWSROOM_IMAGE":
+						SetNewsRoomImage(m.message);
+						break;
 				}
 				break;
 			case "PHOTOGRAPHER":
@@ -646,6 +675,16 @@ public class NetworkManager2 : MonoBehaviour
 		{
 			HostAddPrompt(-1, prompt);
 		}
+	}
+
+	private void SetNewsRoomPrompt(string prompt)
+	{
+		// todo
+	}
+
+	private void SetNewsRoomImage(string url)
+	{
+		// todo
 	}
 
 	public void SendChosenUrl(string url)

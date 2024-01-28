@@ -73,4 +73,39 @@ public class Host
 			NetworkManager2.Instance.HostLoadIntoPhotos();
 		}
 	}
+	
+	int loadedNewsRoomCounter = 0;
+	public void ClientLoadedNewsRoom()
+	{
+		loadedNewsRoomCounter++;
+
+		Debug.Log(confirmCounter);
+		Debug.Log(playerCount);
+		if (loadedNewsRoomCounter == playerCount - 1)
+		{
+			NetworkManager2.Instance.AllClientsInNewsRoom();
+		}
+	}
+
+	int counter = -1;
+	public struct PromptAndImageCombo
+	{
+		public string prompt;
+		public string url;
+	}
+	public PromptAndImageCombo GetNextPromptAndImage()
+	{
+		PromptAndImageCombo combo = new();
+		combo.prompt = allPrompts[counter];
+		combo.url = imageUrls[counter];
+
+		++counter;
+
+		return combo;
+	}
+
+	public int GetPlayerCount()
+	{
+		return playerCount;
+	}
 }
