@@ -63,7 +63,10 @@ public class NetworkManager : MonoBehaviour
 		rtcConnection.OnIceCandidate = e =>
 		{
 			if (!string.IsNullOrEmpty(e.Candidate))
-				rtcConnection.AddIceCandidate(e);
+			{
+				// SendObjectToServer(new );
+				// todo: 
+			}
 		};
 
 		rtcConnection.OnIceConnectionChange = state =>
@@ -76,11 +79,17 @@ public class NetworkManager : MonoBehaviour
 			Debug.Log(state);
 		};
 
-		RTCConfiguration rtcConfiguration = new RTCConfiguration();
+		RTCConfiguration rtcConfiguration = default;
 		rtcConfiguration.iceServers = new RTCIceServer[] { new() {
 			urls = new string[]
 			{
 				"stun:stun.relay.metered.ca:80"
+			}
+		},
+		new() {
+			urls = new string[]
+			{
+				"stun:stun.l.google.com:19302"
 			}
 		},
 		new() {
@@ -115,7 +124,14 @@ public class NetworkManager : MonoBehaviour
 			username = "bb975cabc169e1c48aa23c54",
 			credential = "eAFvAGwqqhORmq+x"
 		}};
+		rtcConfiguration.iceTransportPolicy = RTCIceTransportPolicy.All;
+		rtcConfiguration.iceCandidatePoolSize = 1; // What does this do? idk...
 		rtcConnection.SetConfiguration(ref rtcConfiguration);
+
+		rtcConnection.OnNegotiationNeeded = () =>
+		{
+			Debug.Log("TEST");
+		};
 	}
 	#endregion
 
@@ -164,11 +180,6 @@ public class NetworkManager : MonoBehaviour
 		lobbySize = packet.size;
 
 		InitRtc();
-		sendChannel = rtcConnection.CreateDataChannel("sendChannel");
-		sendChannel.OnOpen = () =>
-		{
-			Debug.Log("Open");
-		};
 
 		StartCoroutine(HandshakeHost());
 	}
@@ -200,6 +211,12 @@ public class NetworkManager : MonoBehaviour
 
 		Debug.Log("Local " + rtcConnection.LocalDescription.sdp);
 		Debug.Log("Remote " + rtcConnection.RemoteDescription.sdp);
+
+		sendChannel = rtcConnection.CreateDataChannel("sendChannel");
+		sendChannel.OnOpen = () =>
+		{
+			Debug.Log("Open");
+		};
 	}
 
 	private async void CreateLobby()
@@ -217,7 +234,7 @@ public class NetworkManager : MonoBehaviour
 		{
 			if (packet.success)
 			{
-				Debug.Log("Sucessfully created a lobbby!");
+				Debug.Log("Sucessfully created a lobby!");
 				Debug.Log(packet.code);
 				hostCode = packet.code;
 
@@ -281,6 +298,7 @@ public class NetworkManager : MonoBehaviour
 				Debug.Log("Connecting to host");
 
 				InitRtc();
+
 				StartCoroutine(ClientHandshake(desc));
 				break;
 		}

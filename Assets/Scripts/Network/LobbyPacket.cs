@@ -11,7 +11,8 @@ public enum LobbyPacketType
 	start,
 	lobbySize,
 	rtcOffer,
-	rtcAnswer
+	rtcAnswer,
+	rtcICE
 }
 
 [System.Serializable]
@@ -115,5 +116,20 @@ public class RtcAnswerPacket : LobbyPacket
 		this.rtcType = rtcType;
 		this.sdp = sdp;
 		this.code = code;
+	}
+}
+
+[System.Serializable]
+public class RtcIcePacket : LobbyPacket
+{
+	public string ice;
+	public string code;
+	public int player;
+
+	public RtcIcePacket(string ice, string code, int player) : base(LobbyPacketType.rtcICE)
+	{
+		this.ice = ice;
+		this.code = code;
+		this.player = player;
 	}
 }
