@@ -48,6 +48,7 @@ public class NetworkManager2 : MonoBehaviour
 
 	bool isHost = false;
 	string hostCode;
+	string photoPrompt;
 
 	int clientPlayerNum = -1;
 
@@ -210,6 +211,16 @@ public class NetworkManager2 : MonoBehaviour
 	{
 		GoToScene("PromptCreator");
 	}
+
+	private void GoToPhotos()
+	{
+		GoToScene("Beta_Photos");
+	}
+
+	private void GoToNews()
+	{
+		GoToScene("Beta_News");
+	}
 	#endregion
 
 	#region Host
@@ -307,13 +318,18 @@ public class NetworkManager2 : MonoBehaviour
 	private void OnMessageFromClient(byte[] message, int playerNum, RtcConnection con)
 	{
 		string s = Encoding.UTF8.GetString(message);
-		Debug.Log(s);
 		DeconstructedMessage m = GetMessageType(s);
 
 		switch (m.type)
 		{
 			case "PROMPT":
 				HostAddPrompt(playerNum, m.message);
+				break;
+			case "LOADED_PHOTO_PROMPT":
+				host.OnConfirmImagePrompt();
+				break;
+			case "IMAGE":
+				host.AddUrl(playerNum, m.message);
 				break;
 		}
 	}
@@ -341,7 +357,7 @@ public class NetworkManager2 : MonoBehaviour
 		GoToIntro();
 	}
 
-	private void SendDataToAllClients(string message)
+	public void SendDataToAllClients(string message)
 	{
 		Debug.Log(message);
 
@@ -349,6 +365,14 @@ public class NetworkManager2 : MonoBehaviour
 		{
 			connection.sendChannel.Send(message);
 		}
+	}
+
+	public void SendDataToClient(int id, string message)
+	{
+		Debug.Log(id);
+		Debug.Log(message);
+
+		connections[id].sendChannel.Send(message);
 	}
 
 	private IEnumerator HostCreateOffer(RtcConnection connection, int playerNum)
@@ -416,6 +440,31 @@ public class NetworkManager2 : MonoBehaviour
 		Debug.Log(string.Format("Got prompt {0} from {1}", prompt, playerID));
 
 		host.AddPrompt(playerID, prompt);
+	}
+
+	private void HostAddUrl(int playerID, string url)
+	{
+		Debug.Log(string.Format("Got image {0} from {1}", url, playerID));
+
+		host.AddUrl(playerID, url);
+	}
+
+	public void HostAllPromptsDone()
+	{
+		host.AssignPhototgraphers();
+	}
+
+	public void HostAllImagesDone()
+	{
+		SendDataToAllClients("GOTO:NEWS");
+		GoToNews();
+	}
+
+	public void HostLoadIntoPhotos()
+	{
+		Debug.Log("Photos");
+		SendDataToAllClients("GOTO:PHOTOS");
+		GoToPhotos();
 	}
 	#endregion
 
@@ -550,9 +599,25 @@ public class NetworkManager2 : MonoBehaviour
 					case "PROMPT":
 						GoToPrompt();
 						break;
+					case "PHOTOS":
+						GoToPhotos();
+						break;
+					case "NEWS":
+						GoToNews();
+						break;
 				}
 				break;
+			case "PHOTOGRAPHER":
+				SetPhotoPrompt(m.message);
+				break;
 		}
+	}
+
+	public void SetPhotoPrompt(string prompt)
+	{
+		photoPrompt = prompt;
+
+		ClientSendToServer("LOADED_PHOTO_PROMPT:");
 	}
 
 	void ClientSendToServer(string message)
@@ -563,6 +628,11 @@ public class NetworkManager2 : MonoBehaviour
 	private void ClientSendPrompt(string prompt)
 	{
 		ClientSendToServer("PROMPT:" + prompt);
+	}
+
+	private void ClientSendUrl(string url)
+	{
+		ClientSendToServer("IMAGE:" + url);
 	}
 	#endregion
 
@@ -578,9 +648,26 @@ public class NetworkManager2 : MonoBehaviour
 		}
 	}
 
+	public void SendChosenUrl(string url)
+	{
+		if (!isHost)
+		{
+			ClientSendUrl(url);
+		}
+		else
+		{
+			HostAddUrl(-1, url);
+		}
+	}
+
 	public string GetLobbyCode()
 	{
 		return hostCode;
+	}
+
+	public string GetPhotoPrompt()
+	{
+		return photoPrompt;
 	}
 
 	#region Net

@@ -59,6 +59,8 @@ public class ImageHandler : MonoBehaviour
 
     private bool called;
 
+    private string url;
+
     private void Start()
     {
         image = new SavedImage();
@@ -79,7 +81,15 @@ public class ImageHandler : MonoBehaviour
             Texture texture = DownloadHandlerTexture.GetContent(uwr);
             rawImage.texture = texture;
             image.SetTexture(texture);
-            rawImage.SetNativeSize();
+            
+            // Fit aspect ratio
+            float aspect = (float)texture.width / texture.height;
+
+            Vector3 scale = rawImage.gameObject.transform.localScale;
+            scale.x = aspect;
+            rawImage.gameObject.transform.localScale = scale;
+
+            this.url = url;
         }
     }
     
@@ -95,7 +105,9 @@ public class ImageHandler : MonoBehaviour
             called = true;
             image.SetScale(rawImage.transform.localScale.x);
             image.SetPos(rawImage.transform.localPosition);
-        }
+
+			NetworkManager2.Instance.SendChosenUrl(url);
+		}
         // screen.texture = image.GetTexture();
         // screen.SetNativeSize();
         // screen.transform.localScale = new Vector3(image.GetScale(), image.GetScale(), 1);
