@@ -578,6 +578,11 @@ public class NetworkManager2 : MonoBehaviour
 		}
 	}
 
+	public string GetLobbyCode()
+	{
+		return hostCode;
+	}
+
 	#region Net
 	struct DeconstructedMessage
 	{
