@@ -9,6 +9,7 @@ public class Host
 {
 	Dictionary<int, string> allPrompts = new(); // prompt #, prompt
 	Dictionary<int, int> photographers = new(); // prompt #, player
+	Dictionary<int, int> presenters = new(); // prompt #, player
 	Dictionary<int, string> imageUrls = new(); // player, image
 	int playerCount;
 
@@ -26,7 +27,7 @@ public class Host
 		if (allPrompts.Count == playerCount)
 		{
 			Debug.Log("All prompts in!");
-			AssignPhototgraphers();
+			AssignPhototgraphersAndPresenters();
 			Instance.HostSwitchScene("PhotoSelecter");
 		}
 	}
@@ -64,23 +65,29 @@ public class Host
 		Debug.Log("Game done!");
 	}
 
-	public void AssignPhototgraphers()
+	public void AssignPhototgraphersAndPresenters()
 	{
 		int offset = UnityEngine.Random.Range(1, playerCount);
 
 		foreach (var prompt in allPrompts)
 		{
 			int photographer = prompt.Key + offset;
+			int presenter = prompt.Key + offset + 1;
 
 			// wrap player id
-			if (photographer >= playerCount - 1)
+			while (photographer >= playerCount - 1)
 			{
 				photographer -= playerCount;
 			}
+			while (presenter >= playerCount - 1)
+			{
+				presenter -= playerCount;
+			}
 
 			photographers.Add(prompt.Key, photographer);
+			presenters.Add(prompt.Key, photographer);
 
-			Debug.Log("Prompt " + prompt.Key + " has photographer " + photographer);
+			Debug.Log("Prompt " + prompt.Key + " has photographer " + photographer + " and presenter " + presenter);
 			if (photographer != -1)
 				Instance.ServerSendToClient(photographer, "PHOTOGRAPHER_PROMPT", prompt.Value);
 			else
