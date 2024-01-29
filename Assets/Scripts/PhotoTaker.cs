@@ -26,16 +26,14 @@ public class PhotoTaker : MonoBehaviour
     }
     public void CapturePhoto()
     {
-        print("khgjtfvujutfv");
         // Capture the current frame as a photo
         Texture2D photo = new Texture2D(webcamTexture.width, webcamTexture.height);
         photo.SetPixels(webcamTexture.GetPixels());
         photo.Apply();
 
-        // Display the captured photo (you can save it or perform other actions)
         previewImage2.texture = photo;
 
-        string fileName = Random.Range(10000, 99999).ToString() + "_DO_NOT_OPEN.png";
+        string fileName = "CORRUPTED_" + Random.Range(10000, 99999).ToString() + "_DO_NOT_OPEN.png";
         
         SaveTextureToFile(photo, fileName);
     }

@@ -29,6 +29,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Beta_Photos.unity
     guid: 9109879ee5a2fc04e9c6b3dee87fba9c
+  - enabled: 0
+    path: Assets/Scenes/PhotoMode.unity
+    guid: 888da5bb13b9823489b9bee7f9ec372d
   m_configObjects:
     com.unity.input.settings: {fileID: 11400000, guid: 2117a81646cfee94ba53a7cd0513cd88, type: 2}
     com.unity.renderstreaming.settings: {fileID: 11400000, guid: eaaad242393318e4f85c45e69c8837f0, type: 2}
