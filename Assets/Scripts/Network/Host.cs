@@ -51,13 +51,15 @@ public class Host
 
 		for (int i = 0; i < playerCount; ++i)
 		{
-			PromptAndImageCombo combo = GetNextPromptAndImage();
+			PromptData combo = GetNextPromptData();
 
 			Instance.ServerSendToAllClients("NEWSROOM_PROMPT", combo.prompt);
 			Instance.ServerSendToAllClients("NEWSROOM_IMAGE", combo.url);
+			Instance.ServerSendToAllClients("NEWSROOM_PRESENTER", combo.presenter);
 
 			NewsMaker.instance.SetHeadline(combo.prompt);
 			NewsMaker.instance.SetImage(combo.url);
+			NewsMaker.instance.SetPresenter(combo.presenter);
 
 			yield return new WaitForSeconds(30);
 		}
@@ -96,16 +98,18 @@ public class Host
 	}
 
 	int counter = -1;
-	public struct PromptAndImageCombo
+	public struct PromptData
 	{
 		public string prompt;
 		public string url;
+		public string presenter;
 	}
-	public PromptAndImageCombo GetNextPromptAndImage()
+	public PromptData GetNextPromptData()
 	{
-		PromptAndImageCombo combo = new();
+		PromptData combo = new();
 		combo.prompt = allPrompts[counter];
 		combo.url = imageUrls[photographers[counter]];
+		combo.presenter = Instance.GetPlayerName(presenters[counter]);
 
 		++counter;
 

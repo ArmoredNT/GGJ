@@ -32,6 +32,9 @@ public class Client
 			case "NEWSROOM_PROMPT":
 				NewsMaker.instance.SetHeadline(m.message);
 				break;
+			case "NEWSROOM_PRESENTER":
+				NewsMaker.instance.SetPresenter(m.message);
+				break;
 			case "NEWSROOM_IMAGE":
 				NewsMaker.instance.SetImage(m.message);
 				break;

@@ -656,4 +656,9 @@ public class NetworkManager2 : MonoBehaviour
 	{
 
 	}
+
+	public string GetPlayerName(int id)
+	{
+		return playerNames[id + 1];
+	}
 }
