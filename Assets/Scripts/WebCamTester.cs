@@ -1,22 +1,74 @@
 using System.Collections;
-using System.Collections.Generic;
+using Unity.WebRTC;
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.Experimental.Rendering;
 
 public class WebCamTester : MonoBehaviour
 {
-    // Start is called before the first frame update
-    [SerializeField] private RawImage rend;
+	private WebCamTexture cam;
+	private Texture2D copyTex;
 
-    private WebCamTexture webcamTexture;
-    void Start()
-    {
-       
-        WebCamDevice[] devices = WebCamTexture.devices;
+	private bool converted = false;
 
-        WebCamTexture tex = new WebCamTexture(devices[0].name);
-        //rend.material.mainTexture = tex;
-        rend.texture = tex;
-        tex.Play();
-    }
+	void Start()
+	{
+		StartCoroutine(StartCo());
+	}
+
+	IEnumerator StartCo()
+	{
+		WebCamDevice[] devices = WebCamTexture.devices;
+
+		if (devices.Length > 0)
+		{
+			for (int i = 0; i < devices.Length; i++)
+			{
+				Debug.Log(devices[i].name);
+			}
+
+			cam = new WebCamTexture(devices[0].name);
+			cam.Play();
+		}
+		else
+		{
+			Debug.LogError("No webcam available");
+		}
+
+		yield return new WaitUntil(() => cam.didUpdateThisFrame);
+
+		var supportedFormat = WebRTC.GetSupportedGraphicsFormat(SystemInfo.graphicsDeviceType);
+		if (cam.graphicsFormat != supportedFormat)
+		{
+			copyTex = new Texture2D(cam.width, cam.height, supportedFormat, TextureCreationFlags.None);
+			StartCoroutine(ConvertFrame());
+			converted = true;
+		}
+		else
+		{
+			converted = false;
+		}
+	}
+
+	private void OnDestroy()
+	{
+		if (cam != null)
+		{
+			cam.Stop();
+			cam = null;
+		}
+	}
+
+	public Texture GetCameraTexture()
+	{
+		return converted ? copyTex : cam;
+	}
+
+	IEnumerator ConvertFrame()
+	{
+		while (true)
+		{
+			yield return new WaitForEndOfFrame();
+			Graphics.ConvertTexture(cam, copyTex);
+		}
+	}
 }

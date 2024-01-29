@@ -108,17 +108,19 @@ public class RtcOfferPacket : LobbyPacket
 	public int player;
 	public RTCSdpType rtcType;
 	public string sdp;
+	public bool toHost;
 
 	public RtcOfferPacket()
 	{
 	}
 
-	public RtcOfferPacket(string code, int player, RTCSdpType rtcType, string sdp) : base(LobbyPacketType.rtcOffer)
+	public RtcOfferPacket(string code, int player, bool toHost, RTCSdpType rtcType, string sdp) : base(LobbyPacketType.rtcOffer)
 	{
 		this.code = code;
 		this.rtcType = rtcType;
 		this.sdp = sdp;
 		this.player = player;
+		this.toHost = toHost;
 	}
 }
 
@@ -129,17 +131,19 @@ public class RtcAnswerPacket : LobbyPacket
 	public RTCSdpType rtcType;
 	public string sdp;
 	public int player;
+	public bool toHost = false;
 
 	public RtcAnswerPacket()
 	{
 	}
 
-	public RtcAnswerPacket(string code, int player, RTCSdpType rtcType, string sdp) : base(LobbyPacketType.rtcAnswer)
+	public RtcAnswerPacket(string code, int player, bool toHost, RTCSdpType rtcType, string sdp) : base(LobbyPacketType.rtcAnswer)
 	{
 		this.rtcType = rtcType;
 		this.sdp = sdp;
 		this.code = code;
 		this.player = player;
+		this.toHost = toHost;
 	}
 }
 

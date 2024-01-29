@@ -13,6 +13,7 @@ public class RtcConnection
 {
 	public RTCPeerConnection rtcConnection;
 	public RTCDataChannel sendChannel;
+	public MediaStreamTrack myVideo;
 	public bool sendOpen = false;
 
 	public void Close()
@@ -56,6 +57,11 @@ public class NetworkManager2 : MonoBehaviour
 	private void Awake()
 	{
 		Instance = this;
+	}
+
+	private void Start()
+	{
+		StartCoroutine(WebRTC.Update());
 	}
 
 	private void OnDestroy()
@@ -286,6 +292,7 @@ public class NetworkManager2 : MonoBehaviour
 
 		host = new Host();
 		client = new Client();
+
 		host.Init(playerNames.Length);
 
 		int lobbySize = playerNames.Length - 1;
@@ -313,13 +320,28 @@ public class NetworkManager2 : MonoBehaviour
 				con.sendOpen = true;
 				con.sendChannel.Send("TEST WOWOWOWOWO!!!");
 			};
+			con.rtcConnection.OnTrack = (e) =>
+			{
+				Debug.Log("VIDEO TRACK");
+				if (e.Track.Kind == TrackKind.Video)
+				{
+					// Add track to MediaStream for receiver.
+					// This process triggers `OnAddTrack` event of `MediaStream`.
+					con.myVideo = e.Track;
+					con.rtcConnection.AddTrack(e.Track);
+				}
+			};
 			int numCpy = i; // Unless we do this stuff breaks
 			con.sendChannel.OnMessage = (message) =>
 			{
 				host.ReceiveMessage(message, numCpy, con);
 			};
 
-			StartCoroutine(HostCreateOffer(con, i));
+			con.rtcConnection.OnNegotiationNeeded = () =>
+			{
+				Debug.Log("Negotiation needed");
+				StartCoroutine(CreateOffer(con, numCpy));
+			};
 		}
 
 		StartCoroutine(WaitTillAllClientsConnected());
@@ -339,11 +361,24 @@ public class NetworkManager2 : MonoBehaviour
 
 			switch (packet.type)
 			{
+				case LobbyPacketType.rtcOffer:
+					Debug.Log("Got offer");
+					RtcOfferPacket offerPacket = new();
+					GetPacket(data, offerPacket);
+
+					RTCSessionDescription desc = new()
+					{
+						type = offerPacket.rtcType,
+						sdp = offerPacket.sdp
+					};
+
+					StartCoroutine(AcceptOffer(desc, connections[offerPacket.player], offerPacket.player));
+					break;
 				case LobbyPacketType.rtcAnswer:
 					RtcAnswerPacket answerPacket = new();
 					GetPacket(data, answerPacket);
 					Debug.Log(answerPacket.player);
-					HostAcceptAnswer(answerPacket, connections[answerPacket.player]);
+					AcceptAnswer(answerPacket, connections[answerPacket.player]);
 					break;
 				case LobbyPacketType.rtcICE:
 					RtcIcePacket icePacket = new();
@@ -367,7 +402,7 @@ public class NetworkManager2 : MonoBehaviour
 		Debug.Log("Host loop done");
 	}
 
-	private IEnumerator HostCreateOffer(RtcConnection connection, int playerNum)
+	private IEnumerator CreateOffer(RtcConnection connection, int playerNum)
 	{
 		// Create offer
 		var op1 = connection.rtcConnection.CreateOffer();
@@ -379,20 +414,20 @@ public class NetworkManager2 : MonoBehaviour
 
 		// Send offer description
 		Debug.Log(playerNum);
-		Task send = WSSendObjectToServer(new RtcOfferPacket(lobbyCode, playerNum, desc.type, desc.sdp));
+		Task send = WSSendObjectToServer(new RtcOfferPacket(lobbyCode, playerNum, !isHost, desc.type, desc.sdp));
 		yield return new WaitUntil(() => send.IsCompleted);
 
-		Debug.Log("Host sent offer");
+		Debug.Log("Sent offer");
 	}
 
-	private void HostAcceptAnswer(RtcAnswerPacket packet, RtcConnection connection)
+	private void AcceptAnswer(RtcAnswerPacket packet, RtcConnection connection)
 	{
 		RTCSessionDescription desc = new();
 		desc.type = packet.rtcType;
 		desc.sdp = packet.sdp;
 		connection.rtcConnection.SetRemoteDescription(ref desc);
 
-		Debug.Log("Host accepted answer");
+		Debug.Log("Accepted answer");
 	}
 
 	IEnumerator WaitTillAllClientsConnected()
@@ -455,11 +490,25 @@ public class NetworkManager2 : MonoBehaviour
 			connection.sendChannel.OnMessage = client.ReceiveMessage;
 
 			connection.sendChannel.Send("TEST 2 YAYAYAYYAY!");
+
+			VideoStreamTrack track = GetVideoTrack();
+			connections[0].myVideo = track;
+			connections[0].rtcConnection.AddTrack(track);
+
+			Debug.Log("Added video track");
 		};
 
 		connections = new RtcConnection[1];
 		connections[0] = connection;
+
 		ClientLoop(connection);
+	}
+
+	VideoStreamTrack GetVideoTrack()
+	{
+		WebCamTester cam = GetComponent<WebCamTester>();
+		return new(cam.GetCameraTexture());
+		// return Camera.main.CaptureStreamTrack(400, 400);
 	}
 
 	private async void ClientLoop(RtcConnection connection)
@@ -489,7 +538,13 @@ public class NetworkManager2 : MonoBehaviour
 						sdp = offerPacket.sdp
 					};
 
-					StartCoroutine(ClientAcceptOffer(desc, connection));
+					StartCoroutine(AcceptOffer(desc, connection, client.GetPlayerId()));
+					break;
+				case LobbyPacketType.rtcAnswer:
+					RtcAnswerPacket answerPacket = new();
+					GetPacket(data, answerPacket);
+					Debug.Log(answerPacket.player);
+					AcceptAnswer(answerPacket, connection);
 					break;
 				case LobbyPacketType.rtcICE:
 					Debug.Log("Ice");
@@ -510,7 +565,7 @@ public class NetworkManager2 : MonoBehaviour
 		Debug.Log("Client loop done");
 	}
 
-	private IEnumerator ClientAcceptOffer(RTCSessionDescription desc, RtcConnection connection)
+	private IEnumerator AcceptOffer(RTCSessionDescription desc, RtcConnection connection, int targetPlayer)
 	{
 		Debug.Log("Client accepted offer");
 
@@ -526,7 +581,7 @@ public class NetworkManager2 : MonoBehaviour
 		yield return connection.rtcConnection.SetLocalDescription(ref desc2);
 
 		// Send answer to server
-		Task send = WSSendObjectToServer(new RtcAnswerPacket(lobbyCode, client.GetPlayerId(), desc2.type, desc2.sdp));
+		Task send = WSSendObjectToServer(new RtcAnswerPacket(lobbyCode, targetPlayer, !isHost, desc2.type, desc2.sdp));
 		yield return new WaitUntil(() => send.IsCompleted);
 
 		Debug.Log("Client sent answer");
@@ -565,7 +620,8 @@ public class NetworkManager2 : MonoBehaviour
 
 		connection.rtcConnection.OnNegotiationNeeded = () =>
 		{
-			Debug.Log("Negotiation needed!");
+			Debug.Log("Negotiation needed");
+			StartCoroutine(CreateOffer(connection, client.GetPlayerId()));
 		};
 
 		RTCConfiguration rtcConfiguration = new();

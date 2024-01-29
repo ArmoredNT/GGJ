@@ -122,7 +122,7 @@
     },
     "com.unity.editorcoroutines": {
       "version": "1.0.0",
-      "depth": 2,
+      "depth": 1,
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.com"
@@ -183,18 +183,6 @@
       "dependencies": {},
       "url": "https://packages.unity.com"
     },
-    "com.unity.renderstreaming": {
-      "version": "3.1.0-exp.7",
-      "depth": 0,
-      "source": "registry",
-      "dependencies": {
-        "com.unity.webrtc": "3.0.0-pre.6",
-        "com.unity.inputsystem": "1.5.1",
-        "com.unity.ugui": "1.0.0",
-        "com.unity.modules.screencapture": "1.0.0"
-      },
-      "url": "https://packages.unity.com"
-    },
     "com.unity.test-framework": {
       "version": "1.1.33",
       "depth": 0,
@@ -247,8 +235,8 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.webrtc": {
-      "version": "3.0.0-pre.6",
-      "depth": 1,
+      "version": "3.0.0-pre.7",
+      "depth": 0,
       "source": "registry",
       "dependencies": {
         "com.unity.modules.jsonserialize": "1.0.0",

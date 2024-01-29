@@ -15,7 +15,6 @@ public class Client
 	public void ReceiveMessage(byte[] message)
 	{
 		string s = Encoding.UTF8.GetString(message);
-		Debug.Log(s);
 
 		var m = NetworkManager2.GetMessageType(s);
 		Debug.Log(m.type);
