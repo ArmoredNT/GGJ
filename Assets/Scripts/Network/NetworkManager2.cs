@@ -8,12 +8,13 @@ using System.Collections;
 using System.Threading.Tasks;
 using UnityEngine.SceneManagement;
 using TMPro;
+using UnityEngine.UI;
 
 public class RtcConnection
 {
 	public RTCPeerConnection rtcConnection;
 	public RTCDataChannel sendChannel;
-	public MediaStreamTrack myVideo;
+	public VideoStreamTrack myVideo;
 	public bool sendOpen = false;
 
 	public void Close()
@@ -43,6 +44,8 @@ public class NetworkManager2 : MonoBehaviour
 	[SerializeField] TMP_InputField lobbyInput;
 	[SerializeField] TMP_InputField nameInput;
 
+	[SerializeField] RawImage debugRenderer;
+
 	private ClientWebSocket webSocket = null;
 
 	RtcConnection[] connections;
@@ -57,11 +60,6 @@ public class NetworkManager2 : MonoBehaviour
 	private void Awake()
 	{
 		Instance = this;
-	}
-
-	private void Start()
-	{
-		StartCoroutine(WebRTC.Update());
 	}
 
 	private void OnDestroy()
@@ -97,13 +95,16 @@ public class NetworkManager2 : MonoBehaviour
 	}
 
 	// TODO: Make a scene loader class
-	private void OnSceneLoad()
+	public void OnSceneLoad()
 	{
 		GameObject[] hostOnlyObjects = GameObject.FindGameObjectsWithTag("HostOnly");
 		foreach (GameObject hostObject in hostOnlyObjects)
 		{
 			hostObject.SetActive(isHost);
 		}
+
+		StartCoroutine(WebRTC.Update());
+		Debug.Log("StartRTCUpdate");
 	}
 
 	private void GoToSceneAsync(string name)
@@ -118,13 +119,6 @@ public class NetworkManager2 : MonoBehaviour
 	private void GoToScene(string name)
 	{
 		SceneManager.LoadScene(name);
-		StartCoroutine(OnSceneLoadCoroutine());
-	}
-
-	private IEnumerator OnSceneLoadCoroutine()
-	{
-		yield return null;
-		OnSceneLoad();
 	}
 	#endregion
 
@@ -327,8 +321,14 @@ public class NetworkManager2 : MonoBehaviour
 				{
 					// Add track to MediaStream for receiver.
 					// This process triggers `OnAddTrack` event of `MediaStream`.
-					con.myVideo = e.Track;
+					con.myVideo = e.Track as VideoStreamTrack;
 					con.rtcConnection.AddTrack(e.Track);
+
+					con.myVideo.OnVideoReceived += (tex) =>
+					{
+						Debug.Log("TEST");
+						debugRenderer.texture = tex;
+					};
 				}
 			};
 			int numCpy = i; // Unless we do this stuff breaks
@@ -353,7 +353,7 @@ public class NetworkManager2 : MonoBehaviour
 		{
 			// Wait for answer or ice
 			LobbyPacket packet = new();
-			byte[] data = new byte[2048];
+			byte[] data = new byte[4096];
 
 			// todo: because of this we get stuck forever in another thread
 			// BUT WHO CARES
@@ -448,7 +448,7 @@ public class NetworkManager2 : MonoBehaviour
 
 		yield return new WaitForSeconds(1); // debug
 
-		HostSwitchScene("Beta_Intro");
+		// HostSwitchScene("Beta_Intro");
 	}
 	#endregion
 	#region Client
@@ -470,7 +470,7 @@ public class NetworkManager2 : MonoBehaviour
 			if (connectPacket.success)
 			{
 				Debug.Log("Sucessfully joined lobbby!");
-				GoToSceneAsync("LobbyUi");
+				GoToScene("LobbyUi");
 			}
 			else
 			{
@@ -482,6 +482,7 @@ public class NetworkManager2 : MonoBehaviour
 		client = new Client();
 
 		RtcConnection connection = InitRtc();
+
 		connection.rtcConnection.OnDataChannel = (channel) =>
 		{
 			Debug.Log("Data channel");
@@ -491,11 +492,13 @@ public class NetworkManager2 : MonoBehaviour
 
 			connection.sendChannel.Send("TEST 2 YAYAYAYYAY!");
 
-			VideoStreamTrack track = GetVideoTrack();
-			connections[0].myVideo = track;
-			connections[0].rtcConnection.AddTrack(track);
-
-			Debug.Log("Added video track");
+			if (connection.myVideo == null)
+			{
+				VideoStreamTrack track = GetVideoTrack();
+				connection.myVideo = track;
+				connection.rtcConnection.AddTrack(track);
+				Debug.Log("Added video track");
+			}
 		};
 
 		connections = new RtcConnection[1];
@@ -518,7 +521,7 @@ public class NetworkManager2 : MonoBehaviour
 		{
 			// Wait for ice candidates
 			LobbyPacket packet = new();
-			byte[] data = new byte[2048];
+			byte[] data = new byte[4096];
 			await WSReceiveObjectFromServer(packet, data);
 
 			switch (packet.type)

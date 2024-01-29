@@ -1,14 +1,20 @@
 using System.Collections;
+using Unity.VisualScripting;
 using Unity.WebRTC;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
+using UnityEngine.UI;
 
 public class WebCamTester : MonoBehaviour
 {
 	private WebCamTexture cam;
 	private Texture2D copyTex;
 
+	[SerializeField] RawImage testImage;
+
 	private bool converted = false;
+
+	bool shouldConvertFrame = false;
 
 	void Start()
 	{
@@ -17,6 +23,8 @@ public class WebCamTester : MonoBehaviour
 
 	IEnumerator StartCo()
 	{
+		Debug.Log("WEBCAM START");
+
 		WebCamDevice[] devices = WebCamTexture.devices;
 
 		if (devices.Length > 0)
@@ -40,7 +48,8 @@ public class WebCamTester : MonoBehaviour
 		if (cam.graphicsFormat != supportedFormat)
 		{
 			copyTex = new Texture2D(cam.width, cam.height, supportedFormat, TextureCreationFlags.None);
-			StartCoroutine(ConvertFrame());
+			// StartCoroutine(ConvertFrame());
+			shouldConvertFrame = true;
 			converted = true;
 		}
 		else
@@ -53,6 +62,7 @@ public class WebCamTester : MonoBehaviour
 	{
 		if (cam != null)
 		{
+			Debug.Log("STOP CAMERA");
 			cam.Stop();
 			cam = null;
 		}
@@ -60,14 +70,14 @@ public class WebCamTester : MonoBehaviour
 
 	public Texture GetCameraTexture()
 	{
+		testImage.texture = converted ? copyTex : cam;
 		return converted ? copyTex : cam;
 	}
 
-	IEnumerator ConvertFrame()
+	private void Update()
 	{
-		while (true)
+		if (shouldConvertFrame)
 		{
-			yield return new WaitForEndOfFrame();
 			Graphics.ConvertTexture(cam, copyTex);
 		}
 	}

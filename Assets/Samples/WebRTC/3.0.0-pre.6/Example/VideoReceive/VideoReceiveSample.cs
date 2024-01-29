@@ -80,6 +80,7 @@ namespace Unity.WebRTC.Samples
                 {
                     video.OnVideoReceived += tex =>
                     {
+                        Debug.Log("TEST");
                         receiveImage.texture = tex;
                     };
                 }
