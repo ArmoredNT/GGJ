@@ -66,11 +66,11 @@ public class Host
 
 	public void AssignPhototgraphers()
 	{
+		int offset = UnityEngine.Random.Range(1, playerCount);
+
 		foreach (var prompt in allPrompts)
 		{
-			int offet = UnityEngine.Random.Range(1, playerCount);
-
-			int photographer = prompt.Key + offet;
+			int photographer = prompt.Key + offset;
 
 			// wrap player id
 			if (photographer >= playerCount - 1)
