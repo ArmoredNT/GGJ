@@ -13,6 +13,11 @@ public class IntroEnder : MonoBehaviour
     IEnumerator WaitForIntro()
     {
         yield return new WaitForSeconds(introLength);
-		NetworkManager2.Instance.HostEndIntro();
+        EndIntro();
+	}
+
+    public void EndIntro()
+    {
+		NetworkManager2.Instance.HostSwitchScene("PromptCreator");
 	}
 }

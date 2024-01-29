@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
+using System.Runtime.CompilerServices;
 public class PromptHandler : MonoBehaviour
 {
 
@@ -18,8 +19,15 @@ public class PromptHandler : MonoBehaviour
             called = true;
             prompt = input.text;
 
-            NetworkManager2.Instance.SendPrompt(prompt);
-        }
+			if (!NetworkManager2.Instance.GetIsHost())
+			{
+				NetworkManager2.Instance.ClientSendToServer("PROMPT", prompt);
+			}
+			else
+			{
+				NetworkManager2.Instance.GetHost().ReceivePrompt(-1, prompt);
+			}
+		}
     }
 
     public void LoadNextScene()

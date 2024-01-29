@@ -497,7 +497,6 @@ GameObject:
   - component: {fileID: 1576460062866015636}
   - component: {fileID: 1440574186929615487}
   - component: {fileID: 3112746906177425773}
-  - component: {fileID: 6415483214895551425}
   - component: {fileID: 8049549787201904683}
   m_Layer: 5
   m_Name: RawImage
@@ -786,7 +785,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 
+  m_text: HEADLINE
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 6d03e8483f5010a4fb5591189363db59, type: 2}
   m_sharedMaterial: {fileID: 429422577246491420, guid: 6d03e8483f5010a4fb5591189363db59, type: 2}
@@ -1066,18 +1065,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
---- !u!114 &6415483214895551425
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 163532448530898875}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f1d6f89262bbfe445a46be97305a1686, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &6905753237747570774
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1142,7 +1129,7 @@ GameObject:
   - component: {fileID: 3613026610821871334}
   - component: {fileID: 8813775342920366206}
   m_Layer: 5
-  m_Name: Timer
+  m_Name: PromptText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1266,7 +1253,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 7606565966225851647}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 63086ab98d86c9340850c6efefd23c6c, type: 3}
+  m_Script: {fileID: 11500000, guid: 97f53882c4228844996e93e5d2f78ca6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1660057539 &9223372036854775807
