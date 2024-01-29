@@ -12,7 +12,8 @@ public enum LobbyPacketType
 	lobbySize,
 	rtcOffer,
 	rtcAnswer,
-	rtcICE
+	rtcICE,
+	lobbyUpdate
 }
 
 [System.Serializable]
@@ -32,6 +33,17 @@ public class LobbyPacket
 }
 
 [System.Serializable]
+public class LobbyPacketRequest : LobbyPacket
+{
+	public string name;
+
+	public LobbyPacketRequest(string name) : base(LobbyPacketType.request)
+	{
+		this.name = name;
+	}
+}
+
+[System.Serializable]
 public class LobbyPacketResponse : LobbyPacket
 {
 	public bool success = false;
@@ -47,10 +59,12 @@ public class LobbyPacketResponse : LobbyPacket
 public class LobbyConnectRequest : LobbyPacket
 {
 	public string code;
+	public string name;
 
-	public LobbyConnectRequest(string code) : base(LobbyPacketType.connectReq)
+	public LobbyConnectRequest(string code, string name) : base(LobbyPacketType.connectReq)
 	{
 		this.code = code;
+		this.name = name;
 	}
 }
 
@@ -152,4 +166,10 @@ public class RtcIcePacket : LobbyPacket
 		this.player = player;
 		this.toHost = toHost;
 	}
+}
+
+[System.Serializable]
+public class LobbyUpdatePacket : LobbyPacket
+{
+	public string[] players;
 }

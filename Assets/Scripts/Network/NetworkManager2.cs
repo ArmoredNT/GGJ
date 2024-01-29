@@ -40,10 +40,12 @@ public class NetworkManager2 : MonoBehaviour
 	[SerializeField] bool useCustomAddr = false;
 
 	[SerializeField] TMP_InputField lobbyInput;
+	[SerializeField] TMP_InputField nameInput;
 
 	private ClientWebSocket webSocket = null;
 
 	RtcConnection[] connections;
+	string[] playerNames;
 	Host host;
 	Client client;
 
@@ -191,8 +193,10 @@ public class NetworkManager2 : MonoBehaviour
 	{
 		await InitWebSocket();
 
+		string name = nameInput.text;
+
 		// Send a message to the main server to create a lobby
-		await WSSendObjectToServer(new LobbyPacket(LobbyPacketType.request));
+		await WSSendObjectToServer(new LobbyPacketRequest(name));
 
 		// Wait for confirmation
 		LobbyPacketResponse packet = new();
@@ -208,7 +212,8 @@ public class NetworkManager2 : MonoBehaviour
 
 				isHost = true;
 
-				GoToSceneAsync("LobbyUi");
+				GoToScene("LobbyUi");
+				HostLoop();
 			}
 			else
 			{
@@ -232,7 +237,7 @@ public class NetworkManager2 : MonoBehaviour
 			return;
 		}
 
-		// Debug.Log(Encoding.UTF8.GetString(buffer));
+		Debug.Log(Encoding.UTF8.GetString(buffer));
 
 		GetPacket(buffer, packet);
 	}
@@ -274,18 +279,16 @@ public class NetworkManager2 : MonoBehaviour
 	// Connect host to each client
 	private async Task ConnectP2P()
 	{
+		string name = nameInput.text;
+
 		// Tell the server to start
 		await WSSendObjectToServer(new LobbyStartPacket(lobbyCode));
 
-		// Get number of player to connect to
-		LobbySizePacket packet = new(-1);
-		await WSReceiveObjectFromServer(packet, new byte[64]);
-
-		int lobbySize = packet.size;
-
 		host = new Host();
 		client = new Client();
-		host.Init(lobbySize + 1);
+		host.Init(playerNames.Length);
+
+		int lobbySize = playerNames.Length - 1;
 
 		connections = new RtcConnection[lobbySize];
 
@@ -293,8 +296,6 @@ public class NetworkManager2 : MonoBehaviour
 		{
 			connections[i] = InitRtc(i);
 		}
-
-		Task task = HostLoop();
 
 		// Connect to each player
 		for (int i = 0; i < lobbySize; i++)
@@ -324,7 +325,7 @@ public class NetworkManager2 : MonoBehaviour
 		StartCoroutine(WaitTillAllClientsConnected());
 	}
 
-	private async Task HostLoop()
+	private async void HostLoop()
 	{
 		while (true)
 		{
@@ -351,9 +352,16 @@ public class NetworkManager2 : MonoBehaviour
 
 					OnReceiveICE(icePacket, connections[icePacket.player]);
 					break;
+				case LobbyPacketType.lobbyUpdate:
+					LobbyUpdatePacket updatePacket = new();
+					GetPacket(data, updatePacket);
+					Debug.Log(updatePacket.players);
+					playerNames = updatePacket.players;
+					UpdateLobbyUI();
+					break;
 			}
 
-			if (connections.Length == 0) break;
+			if (connections != null && connections.Length == 0) break;
 		}
 
 		Debug.Log("Host loop done");
@@ -414,8 +422,9 @@ public class NetworkManager2 : MonoBehaviour
 		await InitWebSocket();
 
 		lobbyCode = lobbyInput.text.ToUpper();
+		string name = nameInput.text;
 		Debug.Log("Connecting to lobby: " + lobbyCode);
-		await WSSendObjectToServer(new LobbyConnectRequest(lobbyCode));
+		await WSSendObjectToServer(new LobbyConnectRequest(lobbyCode, name));
 
 		// Wait for confirmation
 		LobbyConnectResponse connectPacket = new();
@@ -487,6 +496,13 @@ public class NetworkManager2 : MonoBehaviour
 					RtcIcePacket icePacket = new();
 					GetPacket(data, icePacket);
 					OnReceiveICE(icePacket, connection);
+					break;
+				case LobbyPacketType.lobbyUpdate:
+					LobbyUpdatePacket updatePacket = new();
+					GetPacket(data, updatePacket);
+					Debug.Log(updatePacket.players);
+					playerNames = updatePacket.players;
+					UpdateLobbyUI();
 					break;
 			}
 		}
@@ -634,5 +650,10 @@ public class NetworkManager2 : MonoBehaviour
 	public void StartCo(IEnumerator co)
 	{
 		StartCoroutine(co);
+	}
+
+	void UpdateLobbyUI()
+	{
+
 	}
 }
