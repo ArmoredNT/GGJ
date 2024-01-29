@@ -8,6 +8,7 @@ using System.Collections;
 using System.Threading.Tasks;
 using UnityEngine.SceneManagement;
 using TMPro;
+using UnityEngine.Events;
 
 public class RtcConnection
 {
@@ -51,6 +52,8 @@ public class NetworkManager2 : MonoBehaviour
 
 	bool isHost = false;
 	string lobbyCode;
+
+	public UnityEvent<string[]> onLoaded;
 
 	#region Init
 	private void Awake()
@@ -238,6 +241,7 @@ public class NetworkManager2 : MonoBehaviour
 		}
 
 		Debug.Log(Encoding.UTF8.GetString(buffer));
+		// UpdateLobbyUI();
 
 		GetPacket(buffer, packet);
 	}
@@ -654,7 +658,7 @@ public class NetworkManager2 : MonoBehaviour
 
 	void UpdateLobbyUI()
 	{
-
+		onLoaded.Invoke(playerNames);
 	}
 
 	public string GetPlayerName(int id)
