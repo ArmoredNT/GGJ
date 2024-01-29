@@ -131,10 +131,6 @@ public class ImageHandler : MonoBehaviour
 				NetworkManager2.Instance.GetHost().ReceiveUrl(-1, url);
 			}
 		}
-		// screen.texture = image.GetTexture();
-		// screen.SetNativeSize();
-		// screen.transform.localScale = new Vector3(image.GetScale(), image.GetScale(), 1);
-		// screen.transform.localPosition = image.GetPos();
 	}
 
 	public void LoadNextScene()
