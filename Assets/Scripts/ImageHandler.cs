@@ -87,6 +87,8 @@ public class ImageHandler : MonoBehaviour
 			}
 			else
 			{
+				rawImage.gameObject.SetActive(true);
+
 				rawImage.texture = texture;
 				image.SetTexture(texture);
 
